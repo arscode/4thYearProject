@@ -1,0 +1,18 @@
+
+
+
+<request>
+	<openflow> 
+		<IPprotocol>
+		TCP
+		</IPprotocol>
+		<sourcePort>
+		1000
+		</sourcePort>
+	</openflow>
+
+	<application>
+	1
+	</application>
+</request>
+

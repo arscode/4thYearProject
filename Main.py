@@ -34,7 +34,7 @@ class Request:
 			element = tree.xpath(path)
 			if element:
 				self.openflow[attribute] = (element[0].text).strip()
-		self.application = tree.xpath("application")[0].text
+		self.application = (tree.xpath("application")[0].text).strip()
 
 
 class RequestStore:
