@@ -29,30 +29,31 @@ class Request:
 		parser = etree.XMLParser(schema = schema)
 		tree = etree.parse(f,parser)
 
-		for x in Openflow:
-			element = tree.xpath(x)
+		for attribute in Openflow:
+			path = '/request/openflow/'+attribute
+			element = tree.xpath(path)
 			if element:
-				self.openflow[x] = element[0].text
+				self.openflow[attribute] = (element[0].text).strip()
 		self.application = tree.xpath("application")[0].text
 
 
 class RequestStore:
-	requests = {}
+	requests = []
 
-	def __init__(self):
-		pass
-
-	def searchRequests():
-		pass
+	def __init__(self,xmlFiles):
+		for xmlFile in xmlFiles:
+			request = Request(xmlFile)
+			self.requests += [request]
+				
+	def printRequests(self):
+		for r in self.requests:
+			print r.application
+			print  r.openflow.values()
 	
 
 
-newRequest = Request("data.xml")
-for j in newRequest.openflow.items():
-	print j
-print "application is "+ newRequest.application
 
-
+#put in requeststore?
 def getFiles():
 	allFiles = os.listdir(os.getcwd())
 	xmlFiles = []
@@ -61,14 +62,15 @@ def getFiles():
 		m = re.match(xmlPattern,fileName)
 		if m and fileName != "FlowSchema.xml":
 			xmlFiles += [m.group(0)]
-
 	print xmlFiles
+	return xmlFiles
+
+
 			
 		
 	
-getFiles()
-
-
+allRequests = RequestStore(getFiles())
+allRequests.printRequests()
 
 
 

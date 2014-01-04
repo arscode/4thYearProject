@@ -33,23 +33,29 @@ Transport destination port/ICMP code 16 bits
 
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-
-<xs:element name="openflow">
+<xs:element name = "request">
 <xs:complexType>
-	<xs:all>
-	<xs:element name="IngressPort" type="xs:integer" minOccurs = "0"/>
-	<xs:element name="EthernetSource" type="xs:string" minOccurs = "0"/>
-	<xs:element name="EthernetDestination" type="xs:string" minOccurs = "0"/>
-	<xs:element name="EthernetType" type="xs:string" minOccurs="0" />
-	<xs:element name="VLANpriority" type ="xs:string" minOccurs ="0" />
-	<xs:element name="IPSourceAddress" type ="xs:string" minOccurs = "0"/>
-	<xs:element name="IPDestinationAddress" type ="xs:string" minOccurs = "0"/>
-	<xs:element name="IPprotocol" type ="xs:string" minOccurs = "0"/>
-	<xs:element name="IPToS" type ="xs:string" minOccurs = "0" />
-	<xs:element name="sourcePort" type ="xs:string" minOccurs = "0"/>
-	<xs:element name="destinationPort" type ="xs:string" minOccurs = "0"/>
-	<xs:element name="VLANID" type ="xs:string" minOccurs = "0"/>
-	</xs:all>
+<xs:sequence>
+	<xs:element name="openflow">
+	<xs:complexType>
+		<xs:all>
+		<xs:element name="IngressPort" type="xs:integer" minOccurs = "0"/>
+		<xs:element name="EthernetSource" type="xs:string" minOccurs = "0"/>
+		<xs:element name="EthernetDestination" type="xs:string" minOccurs = "0"/>
+		<xs:element name="EthernetType" type="xs:string" minOccurs="0" />
+		<xs:element name="VLANpriority" type ="xs:string" minOccurs ="0" />
+		<xs:element name="IPSourceAddress" type ="xs:string" minOccurs = "0"/>
+		<xs:element name="IPDestinationAddress" type ="xs:string" minOccurs = "0"/>
+		<xs:element name="IPprotocol" type ="xs:string" minOccurs = "0"/>
+		<xs:element name="IPToS" type ="xs:string" minOccurs = "0" />
+		<xs:element name="sourcePort" type ="xs:string" minOccurs = "0"/>
+		<xs:element name="destinationPort" type ="xs:string" minOccurs = "0"/>
+		<xs:element name="VLANID" type ="xs:string" minOccurs = "0"/>
+		</xs:all>
+	</xs:complexType>
+	</xs:element>
+<xs:element name = "application" type="xs:integer"/>
+</xs:sequence>
 </xs:complexType>
 </xs:element>
 </xs:schema>
