@@ -1,16 +1,12 @@
 
 
-#strip whitespace
 
 
-
-#load xml file, turn into request
 
 #put request into dictionary, also update list of stuff to monitor
 
 #when events happen, run through dictionary and see what programs want to be infinformed
 
-#use SAX, no need for to hold everything in memory
 
 from lxml import etree
 import os
@@ -48,7 +44,7 @@ class RequestStore:
 	def printRequests(self):
 		for r in self.requests:
 			print r.application
-			print  r.openflow.values()
+			print  r.openflow.items()
 	
 
 
@@ -79,7 +75,6 @@ allRequests.printRequests()
 
 
 
-
-
+			
 
 
