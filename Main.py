@@ -9,6 +9,7 @@
 
 
 from lxml import etree
+from Monitor import Monitor
 import os
 import re
 Openflow = ('IngressPort','EthernetSource','EthernetDestination','EthernetType','VLANpriority','IPSourceAddress','IPDestinationAddress','IPprotocol','IPToS','sourcePort','destinationPort','VLANID')
@@ -52,6 +53,7 @@ class RequestStore:
 #put in requeststore?
 def getFiles():
 	allFiles = os.listdir(os.getcwd())
+	print "current working directory is "+os.getcwd()
 	xmlFiles = []
 	xmlPattern= re.compile('^.*\.(xml)$')
 	for fileName in allFiles:
@@ -64,9 +66,10 @@ def getFiles():
 
 			
 		
-	
-allRequests = RequestStore(getFiles())
-allRequests.printRequests()
+def launch():	
+	allRequests = RequestStore(getFiles())
+	allRequests.printRequests()
+	m = Monitor(allRequests)
 
 
 

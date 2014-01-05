@@ -1,3 +1,3 @@
 
 
-mn --custom /home/mininet/myScripts/diamondTopo.py --topo mytopo --mac --switch ovsk --controller remote
+mn --topo linear,10 --mac --switch ovsk --controller remote
