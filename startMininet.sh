@@ -1,3 +1,3 @@
 
 
-mn --topo linear,10 --mac --switch ovsk --controller remote
+mn --topo linear,3 --mac --switch ovsk --controller remote

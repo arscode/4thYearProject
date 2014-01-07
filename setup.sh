@@ -20,12 +20,11 @@ ovs-vsctl -- '--id=@sflow' create sflow agent=s1-eth1 target=\"127.0.0.1:6343\" 
 
 
 /home/james/mininet/sflow-rt/start.sh &
-sleep 5
 #firefox http://localhost:8008 &
-sleep 5
 POX="pox"
 
-/home/james/pox/pox.py Main l3_learning spanning_tree log.level --WARNING &
+
+/home/james/pox/pox.py Main Monitor nicira --convert-packet-in l2_learning  log --no-default &
 
 curl -H "Content-Type:application/json" -X PUT --data "{keys:'ipsource,ipdestination,tcpsourceport,tcpdestinationport',value:'bytes'}" http://127.0.0.1:8008/flow/test/json
 #mn '--mac' '--controller=remote' '--custom=/home/mininet/mininet/custom/diamondTopo.py' '--topo mytopo' '--switch=ovsk' 
