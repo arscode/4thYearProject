@@ -4,41 +4,36 @@ import httplib
 import urllib
 import time
 import json
+import requests
 
 class SMonitor(object):
 
 
-    def __init__(self, requests, switches):
+    def __init__(self, matches, switches):
         #get a list of switches, put sflow agents on all of them
-        #add all of the requests into corresponding sflow flow defs and thresholds
+        #add all of the matches into corresponding sflow flow defs and thresholds
         #go through all of the flow defs, and push them onto all of the switches.
         #switches and flows seperate. register agents on all switches, and from then on push flows to sflow-rt collector, independent of switches
         #each sflow agent needs its own ip address
         
         self.switches = switches
-        self.requests = requests
+        self.requests = matches
         self.collectorIP = "127.0.0.1"
         self.collectorPort = "6343"
         self.sampling = "64"
         self.polling = "10"
     
-        
-        self.registerAgents()
+     
         self.sendAllFlows()
-        self.getAllFlows()
+        self.getFlow()
+        #self.getAllFlows()
 
 
 
 
 
 
-    def registerAgents(self): #need to configure ip addresses to use
-            for s in self.switches:
-                bridge = s[:2]
-                register = "ovs-vsctl -- --id=@s create sFlow agent="+s+" target="+self.collectorIP+self.collectorPort+" polling="+self.polling+"     sampling="+self.sampling+" -- set Bridge "+bridge+" sflow=@s"
-                print "bridge is " + bridge
-                #print register
-                call(register, shell=True)
+   
     
         
 
@@ -50,53 +45,60 @@ class SMonitor(object):
             self.sendFlow(keys,values,app)
         
             #use javascript functions. see scripts in sflow api
+            
+            
+            
+    """poll collector to see if any of the matches have been found.
+    go through all of the matches, and see if any have been completed.
+    rewrite method so it takes in a specific flow, and checks it """
+    def getFlow(self):
+        #write timer without pausing thread
+        while True:
+            response = requests.get("http://localhost:8008/flows/json?name=14&maxFlows=100&timeout=60") #set flow def to log lows
+            if response.status_code != 200: continue
+            flows = response.json()
+            if len(flows) != 0:
+                flowID = flows[0]["flowID"]
+                flows.reverse()
+                for f in flows:
+                    print str(f['flowKeys']) + ',' + str(int(f['value'])) + ',' + str(f['end'] - f['start']) + ',' + f['agent'] + ',' + str(f['dataSource'])
+        
 
 
     def getAllFlows(self):
-        headers = {}
-        headers["Content-Type"] = "application/json"
-        connection = httplib.HTTPConnection("localhost",8008) 
+    
         
-        flow = "/metrics/ALL/14/json"
+        flow = "/flows/json"
         count = 0
         while True:
-           
-            connection.connect()
-            r = connection.request("GET",flow," ",headers) #whitespace?
-            response = connection.getresponse()
-            #print response.status
-            #print response.reason
-        
-            flows = json.loads(response.read())
-            #print len(flows)
-            if len(flows) == 0: continue
-
-             #code from official sflow rt blog
-            flowID = flows[0]["flowID"]
-            flows.reverse()
-            for f in flows:
-                print str(f['flowKeys']) + ',' + str(int(f['value'])) + ',' + str(f['end'] - f['start']) + ',' + f['agent'] + ',' + str(f['dataSource'])
-
-
+           r = requests.get("http://localhost:8008"+flow)
+           if r.status_code != 200: break
+           events = r.json()
+           print events
+           eventID = events[0]["eventID"]
+           for e in events:
+               if 'incoming' == e['metric']:
+                   r = requests.get(target + '/metric/' + e['agent'] + '/' + e['dataSource'] + '.' + e['metric'] + '/json')
+                   metric = r.json()
+                   if len(metric) > 0:
+                        print metric[0]["topKeys"][0]["key"]
 
         #print attributes
     def sendFlow(self,keys,values,name):
-        headers = {}
-        headers["Content-Type"] = "application/json"
-        headers["Accept"] = "*/*"
-        connection = httplib.HTTPConnection("localhost",8008) 
-        connection.connect() 
         flow = "/flow/"+name+"/json"
         attributes = "{keys:'"
         attributes += ','.join(keys)
         attributes += "', filter:'"
         attributes += ','.join(values)
+        attributes += "', log:'true"
         attributes += "',value:'frames'}"
-        r = connection.request("PUT",flow, attributes,headers)
-        print attributes
-        response = connection.getresponse()
-        print response.status
-        print response.reason
+        payload = dict([('keys:',','.join(keys)), ('filter:',','.join(values)),('value:','frames')])
+        #print attributes
+        #print payload.items()
+       
+        r = requests.put("http://localhost:8008"+flow,data=attributes)
+        
+        print r.text
         
 
     def parseRequest(self,request):

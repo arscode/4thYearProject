@@ -75,7 +75,7 @@ def start_switch(event):
 def launch():    
     allRequests = RequestStore(getFiles())
     allRequests.printRequests()
-    m = SMonitor(allRequests,["s1-eth1","s2-eth1","s3-eth1"])
+    m = SMonitor(allRequests,["s1-eth1","s2-eth1","s3-eth1","s4-eth1"])
 
     #core.openflow.addListenerByName("ConnectionUp", start_switch)
 
