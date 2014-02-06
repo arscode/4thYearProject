@@ -1,59 +1,14 @@
-
-
-
-
-
-#put request into dictionary, also update list of stuff to monitor
-
-#when events happen, run through dictionary and see what programs want to be infinformed
-
-
-from pox.core import core
-import pox.openflow.libopenflow_01 as of
-from Monitor import Monitor
-from SMonitor import SMonitor
-from Request import Request
-import os
 import re
+import threading
+import Queue
+import os
 
 
-
-class RequestStore:
-    requests = []
-
-    def __init__(self,xmlFiles):
-        for xmlFile in xmlFiles:
-            request = Request(xmlFile)
-            request.fromFile(xmlFile)
-            self.requests += [request]
-                
-    def printRequests(self):
-        for r in self.requests:
-            print r.application
-            print r.openflow.items()
+from Schema import Schema, SchemaStore
+from Openflow import Openflow
+from Sflow import Sflow
 
 
-    def check(self,originalRequest, packetRequest):
-        
-        #first see what tuples this request, the one from the xml, has, and match those
-        #with the request from the packet. all attributes must match. PacketRequest will have
-        #more tuples than neccessary, so need to check from the xml Request one
-        
-        print "original attributes are "
-        print originalRequest.openflow.keys()
-
-        print "other request attributes"
-        print packetRequest.openflow.keys()
-
-        print "checking..."
-        
-        for r in self.requests:
-            r.equals(request)
-    
-
-
-
-#put in requeststore?
 def getFiles():
     allFiles = os.listdir(os.getcwd())
     print "current working directory is "+os.getcwd()
@@ -67,22 +22,49 @@ def getFiles():
     return xmlFiles
 
 
-def start_switch(event):
-    Tutorial(event.connection)
+def monitor():
 
-            
+    schemas = SchemaStore(getFiles())
+    schemas.printSchemas()
+
+    recentMatches = []
+    
+    #openflow = Openflow(schemas)
+    sflow = Sflow(schemas, recentMatches)
+    sflow.start()
+
+    while True:
+      if sflow.recentMatches:
+        print sflow.recentMatches
+        #for every schema:
+        #check recentMatches
+        #check utilisatoin
+        #check latency
+        #check jitter
         
-def launch():    
-    allRequests = RequestStore(getFiles())
-    allRequests.printRequests()
-    m = SMonitor(allRequests,["s1-eth1","s2-eth1","s3-eth1","s4-eth1"])
-
-    #core.openflow.addListenerByName("ConnectionUp", start_switch)
 
 
 
+monitor()
 
 
-            
+      
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
