@@ -23,7 +23,7 @@ class LatencyMeasurment():
         
         
     def sendStatsRequest(self):
-        self.startTime = time.time() # try and do this last
+        self.startTime = time.time() 
         self.switch.send(of.ofp_stats_request(body=of.ofp_flow_stats_request()))
         
     

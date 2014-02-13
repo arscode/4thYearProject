@@ -1,9 +1,10 @@
 from pox.core import core
+from pox.lib.addresses import EthAddr
 import openflow.libopenflow_01 as of
 import pox.openflow.nicira as nx
 import threading
 import time
-
+import pox.lib.packet as pkt
 
 from Schema import Schema
 from LatencyMeasurment import LatencyMeasurment
@@ -18,7 +19,8 @@ class Openflow(threading.Thread):
     
     def __init__(self, schemas):
         #core.openflow.addListeners(self) # never ever have this line uncommented.
-        core.openflow.addListenerByName("PacketIn",self.handleStuff)
+        core.openflow.addListenerByName("PacketIn",self.handlePacketIn)
+        core.openflow.addListenerByName("PortStatus",self.showPortStatus)
         self.schemas = schemas
         threading.Thread.__init__(self)
         """for s in self.schemas.schemas:
@@ -32,24 +34,29 @@ class Openflow(threading.Thread):
             self.measureLatency("1","2")
         
 
-    def handleStuff(self,event):
+    def handlePacketIn(self,event):
         packet = event.parsed
+        print packet
         
-        
-        #print self.requests.printRequests()
-        #packet = Request()   #when I parse packets, it somehow replaces the requests in request store
-        #packet.fromPacket(packet)
+        ether = packet.find('ethernet')
+       
+        if ether and ether.type==0001: 
+            print "got it."
+            print time.strptime(ether.payload)
+             
+            
+        """
         packetRequest = Schema()
         packetRequest.fromPacket(packet)
 
-
-        """when packet is received, go through all requests to see who's interested"""
+        when packet is received, go through all requests to see who's interested
         for originalRequest in self.schemas.schemas:
 
             if originalRequest.equals(packetRequest):
                 print "application "+str(originalRequest.application)+" wanted "+str(originalRequest.openflow.items())
                 print "found: " + str(packetRequest.openflow.items())
                 print "\n\n"
+        """
             
 
     
@@ -148,9 +155,51 @@ class Openflow(threading.Thread):
         
         
         
+        """send flow mod to switch, put timestamp in ethernet packet, and choose the right port that goes to s2"""
+        
+        match = of.ofp_match()
+        match.dl_type= 0001
+        self.sendLatencyFlowMod(s1)
+        time.sleep(1)
+        self.sendLatencyEthernetPacket(2,s1) #get port number from mac address
         
         
         
+        " to get the port, use mac table?"
+    def sendLatencyEthernetPacket(self,outPort,switch):
+        ether = pkt.ethernet()
+        #effective_ethertype
+        ether.type = 0001 #arbitary type, taken from paper
+        ether.dst = EthAddr("ff:ff:ff:ff:ff:ff")
+        ether.src = EthAddr("01:02:03:04:05:06")
+        msg = of.ofp_packet_out()
+        action = of.ofp_action_output(port=outPort)
+        msg.actions.append(action)
+        timeStamp = time.time()
+        ether.payload = timeStamp
+        msg.data = ether
+        print "sending ethernet packet"
+        print ether.payload
+        switch.send(msg)
+        "put time stamp in etherpacket. this is working, just need to add payload"
+        
+    def sendLatencyFlowMod(self,switch):
+        msg = of.ofp_flow_mod()
+        msg.match.dl_type = 0001
+        print "sending flow..."
+        msg.actions.append(of.ofp_action_output(port=of.OFPP_CONTROLLER))
+        switch.send(msg)
+        
+        
+    def showPortStatus (self, event):
+        if event.added:
+            action = "added"
+        elif event.deleted:
+            action = "removed"
+        else:
+            action = "modified"
+        print "Port %s on Switch %s has been %s." % (event.port, event.dpid, action)
+       
 
 
     
