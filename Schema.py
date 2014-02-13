@@ -16,6 +16,7 @@ class Schema:
     def __init__(self):
         self.openflow = dict.fromkeys(['IngressPort','EthernetSource','EthernetDestination','EthernetType','VLANpriority','IPSourceAddress','IPDestinationAddress','IPprotocol','IPToS','sourcePort','destinationPort','VLANID'])
         self.application = None
+     
        
 
         
@@ -67,8 +68,12 @@ class Schema:
 
     def fromJSON(self,data):
         #strip u
-        print data[0]
+        print "parsing json"
         for key, value in data[0].iteritems():
+            if type(key)=='unicode':
+                key.encode('utf-8')
+            if type(value)=='unicode':
+                value.encode('utf-8')
             print key
             print value
         #get key, find right openflow bit, put value in
