@@ -36,13 +36,15 @@ class Openflow(threading.Thread):
 
     def handlePacketIn(self,event):
         packet = event.parsed
-        print packet
-        
         ether = packet.find('ethernet')
-       
         if ether and ether.type==0001: 
-            print "got it."
-            print time.strptime(ether.payload)
+            finish = time.time()
+            tTotal = finish - self.timeStamp 
+            latency = tTotal -(self.timeS1/2) - (self.timeS1/2)
+            print "switch one "+ str(self.timeS1/2)
+            print "switch two "+ str(self.timeS2/2)
+            print "total " + str(tTotal)
+            print "latency between switch one and switch two is: "+str(latency)
              
             
         """
@@ -175,11 +177,11 @@ class Openflow(threading.Thread):
         msg = of.ofp_packet_out()
         action = of.ofp_action_output(port=outPort)
         msg.actions.append(action)
-        timeStamp = time.time()
-        ether.payload = timeStamp
+        self.timeStamp= time.time()
+        #timeStamp = time.time()
+        #ether.payload = timeStamp
         msg.data = ether
         print "sending ethernet packet"
-        print ether.payload
         switch.send(msg)
         "put time stamp in etherpacket. this is working, just need to add payload"
         

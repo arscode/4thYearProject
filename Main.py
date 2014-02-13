@@ -30,8 +30,10 @@ def monitor():
 
    
     
-    openflow = Openflow(schemas)
-    openflow.start()
+    #openflow = Openflow(schemas)
+    #openflow.start()
+    sflow = Sflow(schemas)
+    sflow.start()
     """infinite loop breaks l2 learning"""
     #while True:
      #   pass
