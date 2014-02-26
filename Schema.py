@@ -5,7 +5,6 @@ from lxml import etree
 from pox.core import core
 import pox.openflow.libopenflow_01 as of
 
-
 class Schema:
     
     
@@ -18,6 +17,7 @@ class Schema:
         self.openflow = dict.fromkeys(['IngressPort','EthernetSource','EthernetDestination','EthernetType','VLANpriority','IPSourceAddress','IPDestinationAddress','IPprotocol','IPToS','sourcePort','destinationPort','VLANID'])
         self.application = None
      
+
        
 
         
@@ -37,8 +37,10 @@ class Schema:
             if element:
                 self.openflow[ofattribute] = (element[0].text).strip()
         #convert types that shouldn't be strings. or use library to get int not text?s
+
         if self.openflow['destinationPort']:
             self.openflow['destinationPort'] = int(self.openflow['destinationPort'])
+
         self.application = (tree.xpath("application")[0].text).strip()
 
 
@@ -69,6 +71,7 @@ class Schema:
 
     def fromJSON(self,data):
         #strip u
+
         print "parsing json"
         for key, value in data[0].iteritems():
             if type(key)=='unicode':
@@ -80,6 +83,7 @@ class Schema:
             if value==u'80': #do this properly
                 print "key equals 80"
                 self.openflow['destinationPort'] = int(value)
+
         #get key, find right openflow bit, put value in
         #print keys
         

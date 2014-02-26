@@ -1,4 +1,5 @@
 from pox.core import core
+
 from pox.lib.addresses import EthAddr
 import openflow.libopenflow_01 as of
 import pox.openflow.nicira as nx
@@ -14,7 +15,9 @@ from Switch import Switch
 
 #pass in connection
 
+
 class Openflow(threading.Thread):
+
     
     #should have way to send match objects to a switch thats just come online    
     matches = []
@@ -57,14 +60,18 @@ class Openflow(threading.Thread):
         when packet is received, go through all requests to see who's interested
         for originalRequest in self.schemas.schemas:
 
+
             if originalRequest.equals(packetRequest):
                 print "application "+str(originalRequest.application)+" wanted "+str(originalRequest.openflow.items())
                 print "found: " + str(packetRequest.openflow.items())
                 print "\n\n"
+
         """
+
             
 
     
+
 
     def handleConnectionUp(self,event):
         self.switches[event.connection.dpid] =  Switch(event.connection)
@@ -72,6 +79,7 @@ class Openflow(threading.Thread):
 
     def handleConnectionDown(self,event):
         self.switches.pop(event.connection.dpid)
+
 
     def createMatch(self,request):
         #loop over dictionary, use switch statement

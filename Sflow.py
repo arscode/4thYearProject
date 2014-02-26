@@ -33,6 +33,7 @@ class Sflow(threading.Thread):
     
 
 
+
     def __init__(self,schemas):
         self.collectorIP = "127.0.0.1"
         self.collectorPort = "6343"
@@ -47,10 +48,12 @@ class Sflow(threading.Thread):
 
 
     def run(self):
+
     	while True:
             self.createFlows()
             self.pushFlows()
             self.checkFlows() 
+
 	
 
 
@@ -67,8 +70,10 @@ class Sflow(threading.Thread):
         #what do I actually send. a list of keys, of what to look for. but I need specific values as well. add key to keys and value to filter
         for attribute, value in schema.openflow.items():
             value = str(value)
+
             if value=="None":
             	continue
+
             if attribute=="IngressPort":
                 pass
 
@@ -85,10 +90,12 @@ class Sflow(threading.Thread):
                 values.append("ethernetprotocol="+value)
 
             elif attribute=="VLANpriority":
+
                 keys.append('vlansourcepriority')
                 keys.append('vlandestinationpriority')
                 values.append("vlansourcepriority="+value)
                 values.append("vlandestinationpriority="+value)
+
 
             elif attribute=="IPSourceAddress":
                 keys.append('ipsource')
@@ -115,11 +122,13 @@ class Sflow(threading.Thread):
                 values.append("tcpdestinationport="+value)
 
             elif attribute=="VLANID":
+
                 keys.append("vlansource")
                 keys.append("vlandestination")
                 values.append("vlansource="+value)
                 values.append("vlandestination="+value)
        
+
         return keys,values,schema.application
 
 
@@ -129,7 +138,9 @@ class Sflow(threading.Thread):
         attributes += ','.join(keys)
         attributes += "', filter:'"
         attributes += ','.join(values)
+
         attributes += "',value:'bytes'}"
+
         return (url,attributes,name)
 
     def createFlows(self):
@@ -157,6 +168,7 @@ class Sflow(threading.Thread):
         connection = httplib.HTTPConnection("localhost",8008)
         connection.request("GET",url," ")
         response = connection.getresponse()
+
         print "getting flow "+name
         return json.loads(response.read())
         """need to get keys not info in json. check flow using name and return the keys myself
@@ -165,8 +177,11 @@ class Sflow(threading.Thread):
 
 
 
+
     def checkFlows(self):
+
          time.sleep(10)
+
          for f in self.flows:
             result = self.getFlow(f[2])
             if result:
@@ -174,7 +189,9 @@ class Sflow(threading.Thread):
                 schema.fromJSON(result)
                 for original in self.schemas.schemas:
                     if original.equals(schema):
+
                         print "sflow match"
+
                         self.recentMatches.append(schema)
             #print "checking "+f[2]
             #print schema

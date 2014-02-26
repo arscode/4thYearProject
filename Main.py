@@ -2,13 +2,16 @@ import re
 import threading
 import Queue
 import os
+
 import time
+
 
 
 from Schema import Schema, SchemaStore
 from Openflow import Openflow
 from Sflow import Sflow
 from Monitor import Monitor
+
 
 
 def getFiles():
@@ -22,6 +25,7 @@ def getFiles():
             xmlFiles += [m.group(0)]
     print xmlFiles
     return xmlFiles
+
 
 
 
@@ -46,12 +50,14 @@ monitor.start()
 
      # if sflow.recentMatches:
        # print sflow.recentMatches
+
         #for every schema:
         #check recentMatches
         #check utilisatoin
         #check latency
         #check jitter
         
+
 """is openflow and sflow have a match, then put in main loop
         could begin with a schema in openflow or sflow, that then gets passed around and data added too
         before it is checked for 
@@ -74,7 +80,6 @@ monitor.start()
         schema needs to include values for bytes
         make a schema with two different openflow attributes, and see what the json returns
          """
-        
 
 
       
