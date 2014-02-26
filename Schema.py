@@ -5,6 +5,7 @@ from lxml import etree
 from pox.core import core
 import pox.openflow.libopenflow_01 as of
 
+
 class Schema:
     
     
@@ -71,11 +72,14 @@ class Schema:
         print "parsing json"
         for key, value in data[0].iteritems():
             if type(key)=='unicode':
-                key.encode('utf-8')
+                key = key.encode('utf-8').decode('ascii')
             if type(value)=='unicode':
-                value.encode('utf-8')
-            print key
-            print value
+                value = value.encode('utf-8')
+           
+           
+            if value==u'80': #do this properly
+                print "key equals 80"
+                self.openflow['destinationPort'] = int(value)
         #get key, find right openflow bit, put value in
         #print keys
         

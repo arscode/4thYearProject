@@ -160,7 +160,8 @@ class Sflow(threading.Thread):
         print "getting flow "+name
         return json.loads(response.read())
         """need to get keys not info in json. check flow using name and return the keys myself
-           so get back the bytes and port number, but not protocol. get this from flow"""
+           so get back the bytes and port number, but not protocol. get this from flow
+            assume key is just tcp for now..."""
 
 
 
@@ -168,10 +169,7 @@ class Sflow(threading.Thread):
          time.sleep(10)
          for f in self.flows:
             result = self.getFlow(f[2])
-            """to begin with, return result if there is information on that flow, so if bytes > 0
-             all the measurments need to be synchronised. so that say every 10 seconds, app is notified"""
             if result:
-            	print result
                 schema = Schema()
                 schema.fromJSON(result)
                 for original in self.schemas.schemas:

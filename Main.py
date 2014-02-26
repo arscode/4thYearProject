@@ -8,6 +8,7 @@ import time
 from Schema import Schema, SchemaStore
 from Openflow import Openflow
 from Sflow import Sflow
+from Monitor import Monitor
 
 
 def getFiles():
@@ -23,24 +24,23 @@ def getFiles():
     return xmlFiles
 
 
-def monitor():
 
-    schemas = SchemaStore(getFiles())
-    schemas.printSchemas()
+schemas = SchemaStore(getFiles())
+schemas.printSchemas()
 
-    """fix parsing, get flows to work. work on architecture. make canonical topology, with ip addresses.
+"""fix parsing, get flows to work. work on architecture. make canonical topology, with ip addresses.
      switch to layer 3 routing. check latency properly, testing different maounts
       and cleearing the ARP cache. then combine flows with latency """
     
-    #openflow = Openflow(schemas)
-    #openflow.start()
-    sflow = Sflow(schemas)
-    sflow.start()
-    """infinite loop breaks l2 learning"""
-    #while True:
-     #   pass
-        #print "...another 20 seconds"
+openflow = Openflow(schemas)
+openflow.start()
+sflow = Sflow(schemas)
+sflow.start()
+monitor = Monitor(sflow,openflow)
+monitor.start()
+"""another infinite loop means it needs its own thread so it doesn't stop routing"""
     
+
     #sflow = Sflow(schemas)
     #sflow.start()
 
@@ -52,7 +52,7 @@ def monitor():
         #check latency
         #check jitter
         
-    """is openflow and sflow have a match, then put in main loop
+"""is openflow and sflow have a match, then put in main loop
         could begin with a schema in openflow or sflow, that then gets passed around and data added too
         before it is checked for 
         
@@ -71,12 +71,10 @@ def monitor():
         
         should the shared memory variables be lists or queues? 
         to measure flows, web server
-        schema needs to include values for bytes """
+        schema needs to include values for bytes
+        make a schema with two different openflow attributes, and see what the json returns
+         """
         
-
-
-
-monitor()
 
 
       
