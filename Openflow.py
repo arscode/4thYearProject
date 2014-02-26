@@ -5,9 +5,11 @@ import pox.openflow.nicira as nx
 import threading
 import time
 import pox.lib.packet as pkt
+import pox.lib.util
 
 from Schema import Schema
 from LatencyMeasurment import LatencyMeasurment
+from Switch import Switch
 
 
 #pass in connection
@@ -21,17 +23,18 @@ class Openflow(threading.Thread):
         #core.openflow.addListeners(self) # never ever have this line uncommented.
         core.openflow.addListenerByName("PacketIn",self.handlePacketIn)
         core.openflow.addListenerByName("PortStatus",self.showPortStatus)
+        core.openflow.addListenerByName("ConnectionUp",self.handleConnectionUp)
+        core.openflow.addListenerByName("ConnectionDown",self.handleConnectionDown)
         self.schemas = schemas
+        self.switches = {}
         threading.Thread.__init__(self)
-        """for s in self.schemas.schemas:
-            print "adding request..."
-            print s.openflow.items()
-            print "---------------------"
-            self.addNewRequest(s)"""
-
+     
+     
+     
+    """00-00-00-03-02-01 """
     def run(self):
-        while True:
-            self.measureLatency("1","2")
+        while True: 
+            self.measureLatency("00-00-00-00-00-01","00-00-00-00-01-01")
         
 
     def handlePacketIn(self,event):
@@ -63,17 +66,12 @@ class Openflow(threading.Thread):
 
     
 
-    def _handle_ConnectionUp(self,event):
-        print "connection up"
-        #Tutorial(event.connection)
-        event.connection.send(nx.nx_packet_in_format())
+    def handleConnectionUp(self,event):
+        self.switches[event.connection.dpid] =  Switch(event.connection)
         
-        for m in self.matches:
-            print "sending "
-            self.sendMatch(m,event.connection) 
 
-    def _handle_ConnectionDown(self,event):
-        pass
+    def handleConnectionDown(self,event):
+        self.switches.pop(event.connection.dpid)
 
     def createMatch(self,request):
         #loop over dictionary, use switch statement
@@ -119,11 +117,13 @@ class Openflow(threading.Thread):
         print "adding request " + str(request.openflow.items())
         
         match = self.createMatch(request)
-        self.matches.append(match)  
-        
+        self.matches.append(match)
         
         
    
+        
+        
+  
         
         
     """sometimes the second switch has a much lower time. maybe cache concerns
@@ -140,9 +140,10 @@ class Openflow(threading.Thread):
         for core.connections print strpid"""
         for switch in core.openflow.connections:
             #print "Switch " + str(switch.dpid)
-            if switchOne.strip() == str(switch.dpid):
+            print pox.lib.util.dpid_to_str(switch.dpid)
+            if switchOne.strip() == pox.lib.util.dpid_to_str(switch.dpid):
                 s1 = switch
-            if switchTwo.strip() == str(switch.dpid):
+            if switchTwo.strip() == pox.lib.util.dpid_to_str(switch.dpid):
                 s2 = switch
                 
         print switchOne+" is "+str(s1)
