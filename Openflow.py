@@ -70,69 +70,13 @@ class Openflow(threading.Thread):
            # if (self.currentSwitches,latency) not in self.results:
                 #self.results.append((self.currentSwitches,latency))
             self.results[self.currentSwitches] = latency
-              
-
 
     def handleConnectionUp(self,event):
         self.switches[event.connection.dpid] =  event.connection
         
 
     def handleConnectionDown(self,event):
-        self.switches.pop(event.connection.dpid)
-
-
-    def createMatch(self,request):
-        #loop over dictionary, use switch statement
-        match = of.ofp_match()
-        for attribute,value in request.openflow.items():
-            if attribute=="IngressPort":
-                match.in_port=value
-            elif attribute=="EthernetSource":
-                match.dl_src=value
-            elif attribute=="EthernetDestination":
-                match.dl_dst=value
-            elif attribute=="EthernetType":
-                match.dl_type=value
-            elif attribute=="VLANpriority":
-                match.dl_vlan_pop=value
-            elif attribute=="IPSourceAddress":
-                match.nw_src=value
-            elif attribute=="IPDestinationAddress":
-                match.nw_dst=value
-            elif attribute=="IPprotocol":
-                match.nw_proto
-            elif attribute=="IPToS":
-                match.nw_tos=value
-            elif attribute=="sourcePort":
-                match.tp_src=value
-            elif attribute=="destinationPort":
-                match.tp_dst=value
-            elif attribute=="VLANID":
-                match.dl_vlan=value
-        return match
-
-    
-        
-
-
-    def sendMatch(self,match,connection):
-        message = of.ofp_flow_mod()
-        message.match = match
-        
-        connection.send(message)
-        
-    def addNewRequest(self,request):
-        print "adding request " + str(request.openflow.items())
-        
-        match = self.createMatch(request)
-        self.matches.append(match)
-        
-        
-   
-        
-        
-  
-        
+        self.switches.pop(event.connection.dpid)              
         
     """sometimes the second switch has a much lower time. maybe cache concerns
        use list of switches to find out what port to use
@@ -147,21 +91,13 @@ class Openflow(threading.Thread):
         time.sleep(5)
         s1 = None
         s2 = None
-        """go through the list of connected switches, mapping between s1 and the dpid trim the input
-        
-        for core.connections print strpid"""
         for switchDPID in self.switches:
-            #print "Switch " + str(switch.dpid)
-            #print pox.lib.util.dpid_to_str(switchDPID)
             if switchOne.strip() == pox.lib.util.dpid_to_str(switchDPID):
                 s1 = self.switches[switchDPID]
             if switchTwo.strip() == pox.lib.util.dpid_to_str(switchDPID):
                 s2 = self.switches[switchDPID]
                 
         """s1 and s2 is a switch object"""
-        
-       
-        
         measureSwitchOne = LatencyMeasurment(s1)
         measureSwitchTwo = LatencyMeasurment(s2)
        # print "Round trip time to switch one: "+str(measureSwitchOne.roundTripTime)

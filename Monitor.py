@@ -12,7 +12,8 @@ class Monitor(threading.Thread):
         threading.Thread.__init__(self)
         
         
-    """go through openflow and sflow shared memory stuff and check for matches"""
+    """go through openflow and sflow shared memory stuff and check for matches
+       create a schema from values, and then match?"""
     def run(self):
         while True:
             time.sleep(5)
@@ -20,8 +21,8 @@ class Monitor(threading.Thread):
             for recentMatch in self.sflow.recentMatches:
                 print recentMatch.openflow.items()
                 
-            for recentLatencyMatch in self.openflow.results.keys():
-                print str(recentLatencyMatch) + " "+ str(self.openflow.results[recentLatencyMatch])
+            #for recentLatencyMatch in self.openflow.results.keys():
+               # print str(recentLatencyMatch) + " "+ str(self.openflow.results[recentLatencyMatch])
         
     
 

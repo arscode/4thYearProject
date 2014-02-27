@@ -16,6 +16,8 @@ class Schema:
     def __init__(self):
         self.openflow = dict.fromkeys(['IngressPort','EthernetSource','EthernetDestination','EthernetType','VLANpriority','IPSourceAddress','IPDestinationAddress','IPprotocol','IPToS','sourcePort','destinationPort','VLANID'])
         self.application = None
+        self.links = [] # tuple with link tuple, and latency value
+        self.latency = ()
      
 
        
@@ -42,6 +44,12 @@ class Schema:
             self.openflow['destinationPort'] = int(self.openflow['destinationPort'])
 
         self.application = (tree.xpath("application")[0].text).strip()
+        
+        if tree.xpath("latency"):
+            firstMac = (tree.xpath("latency/firstMac")[0].text).strip()
+            secondMac = (tree.xpath('latency/secondMac')[0].text).strip()
+            value = int (tree.xpath('latency/milliseconds')[0].text)
+            self.latency = ((firstMac,secondMac),value)
 
 
     def fromPacket(self, packet):
@@ -114,6 +122,7 @@ class SchemaStore:
         for r in self.schemas:
             print r.application
             print r.openflow.items()
+            print r.latency
 
         def check(self,originalSchema, packetSchema):
             print "original attributes are "

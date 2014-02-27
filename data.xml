@@ -14,5 +14,18 @@
 	<application>
 	1
 	</application>
+
+<latency>
+	<milliseconds>
+	100
+	</milliseconds>
+	<firstMac>
+	00-00-00-00-00-02
+	</firstMac>
+	<secondMac>
+	00-00-00-03-01-03
+	</secondMac>
+</latency>
+
 </request>
 
