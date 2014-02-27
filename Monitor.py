@@ -16,8 +16,12 @@ class Monitor(threading.Thread):
     def run(self):
         while True:
             time.sleep(5)
+            print "results from sflow and openflow"
             for recentMatch in self.sflow.recentMatches:
                 print recentMatch.openflow.items()
+                
+            for recentLatencyMatch in self.openflow.results.keys():
+                print str(recentLatencyMatch) + " "+ str(self.openflow.results[recentLatencyMatch])
         
     
 

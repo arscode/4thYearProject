@@ -25,6 +25,8 @@ class Openflow(threading.Thread):
         core.openflow.addListenerByName("ConnectionDown",self.handleConnectionDown)
         self.schemas = schemas
         self.switches = {}
+        self.currentSwitches = ()
+        self.results = {}
         threading.Thread.__init__(self)
         
         
@@ -36,19 +38,19 @@ class Openflow(threading.Thread):
         aggregateOne = ("00-00-00-00-02-01",{"00-00-00-04-01-01":1,"00-00-00-00-00-01":2,"00-00-00-04-01-02":3,"00-00-00-00-01-01":4})
         aggregateTwo = ("00-00-00-00-03-01",{"00-00-00-04-02-01":1,"00-00-00-00-00-01":2,"00-00-00-04-02-02":3,"00-00-00-00-01-01":4})
         aggregateThree = ("00-00-00-01-02-01",{"00-00-00-04-01-01":1,"00-00-00-01-00-01":2,"00-00-00-04-01-02":3,"00-00-00-01-01-01":4})
-        
-        aggregateFour = ("00-00-00-01-03-01",{"00-00-00-04-02-01":1,"00-00-00-00-00-01":2,"00-00-00-04-02-02":3,"00-00-00-01-01-01":4})
-        aggregateFive = ("00-00-00-02-02-01",{"00-00-00-04-02-01":1,"00-00-00-00-00-01":2,"00-00-00-04-02-02":3,"00-00-00-01-01-01":4})
-        aggregateSix = ("00-00-00-02-03-01",{"00-00-00-04-02-01":1,"00-00-00-00-00-01":2,"00-00-00-04-02-02":3,"00-00-00-01-01-01":4})
-        aggregateSeven = ("00-00-00-03-02-01",{"00-00-00-04-02-01":1,"00-00-00-00-00-01":2,"00-00-00-04-02-02":3,"00-00-00-01-01-01":4})
-        aggregateEight = ("00-00-00-03-03-01",{"00-00-00-04-02-01":1,"00-00-00-00-00-01":2,"00-00-00-04-02-02":3,"00-00-00-01-01-01":4})
+        aggregateFour = ("00-00-00-01-03-01",{"00-00-00-04-02-01":1,"00-00-00-01-00-01":2,"00-00-00-04-02-02":3,"00-00-00-01-01-01":4})
+        aggregateFive = ("00-00-00-02-02-01",{"00-00-00-04-01-01":1,"00-00-00-02-00-01":2,"00-00-00-04-01-02":3,"00-00-00-02-01-01":4})
+        aggregateSix = ("00-00-00-02-03-01",{"00-00-00-04-02-01":1,"00-00-00-02-00-01":2,"00-00-00-04-02-02":3,"00-00-00-02-01-01":4})
+        aggregateSeven = ("00-00-00-03-02-01",{"00-00-00-04-01-01":1,"00-00-00-03-00-01":2,"00-00-00-04-01-02":3,"00-00-00-03-01-01":4})
+        aggregateEight = ("00-00-00-03-03-01",{"00-00-00-04-02-01":1,"00-00-00-03-00-01":2,"00-00-00-04-02-02":3,"00-00-00-03-01-01":4})
    
-        self.switchMap = [coreOne,coreTwo,coreThree,coreFour,aggregateOne,aggregateTwo,aggregateThree]
+        self.switchMap = [coreOne,coreTwo,coreThree,coreFour,aggregateOne,aggregateTwo,aggregateThree,aggregateFour,aggregateFive,aggregateSix,aggregateSeven,aggregateEight]
     
     
     def run(self):
         while True: 
-            self.measureLatency("00-00-00-02-00-01","00-00-00-02-03-01")
+             self.measureLatency("00-00-00-02-02-01","00-00-00-04-01-01")
+            #self.measureLatency("00-00-00-00-02-01","")
         
 
     def handlePacketIn(self,event):
@@ -58,11 +60,16 @@ class Openflow(threading.Thread):
             finish = time.time()
             tTotal = finish - self.timeStamp 
             latency = tTotal -((self.timeS1/2) + (self.timeS2/2))
-            print "switch one "+ str(self.timeS1/2)
-            print "switch two "+ str(self.timeS2/2)
-            print "total " + str(tTotal)
+           # print "switch one "+ str(self.timeS1/2)
+            #print "switch two "+ str(self.timeS2/2)
+            #print "total " + str(tTotal)
             """this is one way, not rtt, like ping is"""
-            print "latency between switch one and switch two is: "+str(latency)
+            #print "latency between switch one and switch two is: "+str(latency)
+            #print "results"
+            #print (self.currentSwitches,latency)
+           # if (self.currentSwitches,latency) not in self.results:
+                #self.results.append((self.currentSwitches,latency))
+            self.results[self.currentSwitches] = latency
               
 
 
@@ -136,6 +143,7 @@ class Openflow(threading.Thread):
        """    
     def measureLatency(self,switchOne, switchTwo):  
         self.TimeTotal = 0 #time between controller, s1, s2
+        self.currentSwitches = (switchOne,switchTwo)
         time.sleep(5)
         s1 = None
         s2 = None
@@ -144,7 +152,7 @@ class Openflow(threading.Thread):
         for core.connections print strpid"""
         for switchDPID in self.switches:
             #print "Switch " + str(switch.dpid)
-            print pox.lib.util.dpid_to_str(switchDPID)
+            #print pox.lib.util.dpid_to_str(switchDPID)
             if switchOne.strip() == pox.lib.util.dpid_to_str(switchDPID):
                 s1 = self.switches[switchDPID]
             if switchTwo.strip() == pox.lib.util.dpid_to_str(switchDPID):
@@ -156,8 +164,8 @@ class Openflow(threading.Thread):
         
         measureSwitchOne = LatencyMeasurment(s1)
         measureSwitchTwo = LatencyMeasurment(s2)
-        print "Round trip time to switch one: "+str(measureSwitchOne.roundTripTime)
-        print "Round trip time to switch two: "+str(measureSwitchTwo.roundTripTime)
+       # print "Round trip time to switch one: "+str(measureSwitchOne.roundTripTime)
+        #print "Round trip time to switch two: "+str(measureSwitchTwo.roundTripTime)
         self.timeS1 = measureSwitchOne.roundTripTime
         self.timeS2 = measureSwitchTwo.roundTripTime
         
@@ -169,10 +177,15 @@ class Openflow(threading.Thread):
         match.dl_type= 0001
         self.sendLatencyFlowMod(s1)
         time.sleep(1)
-        print str(s1)[1:-3] +"wants to find the port number for "+str(s2)[1:-3]
-        #print "Found: "+self.switchMap[]
-       # pox.lib.util.dpid_to_str
-        self.sendLatencyEthernetPacket(3,s1) #get port number from mac address
+        s1MAC = (str(s1)[1:-3]).strip()
+        s2MAC = (str(s2)[1:-3]).strip()
+        port = None
+        print  s1MAC +" wants to find the port number for "+s2MAC
+       
+        for s in self.switchMap:
+            if (s[0]).strip() == s1MAC:
+                port = s[1][s2MAC]
+        self.sendLatencyEthernetPacket(port,s1)
         
         
    
@@ -186,8 +199,7 @@ class Openflow(threading.Thread):
         action = of.ofp_action_output(port=outPort)
         msg.actions.append(action)
         self.timeStamp= time.time()
-        #timeStamp = time.time()
-        #ether.payload = timeStamp
+    
         msg.data = ether
         print "sending ethernet packet"
         switch.send(msg)
