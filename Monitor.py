@@ -13,7 +13,8 @@ class Monitor(threading.Thread):
         
         
     """go through openflow and sflow shared memory stuff and check for matches
-       create a schema from values, and then match?"""
+       create a schema from values, and
+        for every schema, go through all the openflow/sflow stuff and see if it matches everything"""
     def run(self):
         while True:
             time.sleep(5)

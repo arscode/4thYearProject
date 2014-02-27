@@ -23,11 +23,13 @@ class Openflow(threading.Thread):
         core.openflow.addListenerByName("PortStatus",self.showPortStatus)
         core.openflow.addListenerByName("ConnectionUp",self.handleConnectionUp)
         core.openflow.addListenerByName("ConnectionDown",self.handleConnectionDown)
-        self.schemas = schemas
+        self.schemas = schemas.schemas
         self.switches = {}
-        self.currentSwitches = ()
+        self.currentSwitches = []
         self.results = {}
+        self.links = []
         threading.Thread.__init__(self)
+        self.getLinks()
         
         
         coreOne = ("00-00-00-04-01-01",{"00-00-00-00-02-01":1,"00-00-00-01-02-01":2,"00-00-00-02-02-01":3,"00-00-00-03-02-1":4})
@@ -48,9 +50,18 @@ class Openflow(threading.Thread):
     
     
     def run(self):
-        while True: 
-             self.measureLatency("00-00-00-02-02-01","00-00-00-04-01-01")
+        while True:
+             for switches  in self.links:
+                 time.sleep(1) #"""need to give packets time to be sent. limitation."""
+                 self.measureLatency(switches[0],switches[1])
+                 
             #self.measureLatency("00-00-00-00-02-01","")
+            
+            
+    def getLinks(self):
+        for s in self.schemas:
+            if s.latency:
+                self.links.append(s.latency[0])
         
 
     def handlePacketIn(self,event):
@@ -124,7 +135,7 @@ class Openflow(threading.Thread):
         self.sendLatencyEthernetPacket(port,s1)
         
         
-   
+    """maybe put specific links as well, in the packet, so can measure a lot at once"""
     def sendLatencyEthernetPacket(self,outPort,switch):
         ether = pkt.ethernet()
         #effective_ethertype
