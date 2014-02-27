@@ -37,7 +37,7 @@ class Openflow(threading.Thread):
    
     def run(self):
         while True: 
-            self.measureLatency("00-00-00-00-00-01","00-00-00-00-02-01")
+            self.measureLatency("00-00-00-02-00-01","00-00-00-02-03-01")
         
 
     def handlePacketIn(self,event):
@@ -46,10 +46,11 @@ class Openflow(threading.Thread):
         if ether and ether.type==0001: 
             finish = time.time()
             tTotal = finish - self.timeStamp 
-            latency = tTotal -(self.timeS1/2) - (self.timeS1/2)
+            latency = tTotal -((self.timeS1/2) + (self.timeS2/2))
             print "switch one "+ str(self.timeS1/2)
             print "switch two "+ str(self.timeS2/2)
             print "total " + str(tTotal)
+            """this is one way, not rtt, like ping is"""
             print "latency between switch one and switch two is: "+str(latency)
              
             
@@ -156,19 +157,7 @@ class Openflow(threading.Thread):
                 
         """s1 and s2 is a switch object"""
         
-        """sl looks up s2 with the mac address, and gets the right port """
-        print switchOne+" has "+str(s1.macToPort.keys())
-      
-        
-        
-        #switch 2 mac address
-        print switchOne+" is looking for Switch two:"+switchTwo
-        print "dictionary length: "+str(len(s1.macToPort))
-        for k,v in s1.macToPort.iteritems():
-            print k,v
-        print "--------------"
-        if switchTwo in s1.macToPort.values():
-            print "found"
+       
         
         measureSwitchOne = LatencyMeasurment(s1.connection)
         measureSwitchTwo = LatencyMeasurment(s2.connection)
@@ -185,11 +174,10 @@ class Openflow(threading.Thread):
         match.dl_type= 0001
         self.sendLatencyFlowMod(s1.connection)
         time.sleep(1)
-        self.sendLatencyEthernetPacket(2,s1.connection) #get port number from mac address
+        self.sendLatencyEthernetPacket(3,s1.connection) #get port number from mac address
         
         
-        
-        " to get the port, use mac table?"
+   
     def sendLatencyEthernetPacket(self,outPort,switch):
         ether = pkt.ethernet()
         #effective_ethertype
