@@ -16,6 +16,7 @@ from Switch import Switch
 #pass in connection
 
 
+
 class Openflow(threading.Thread):
 
     
@@ -33,11 +34,10 @@ class Openflow(threading.Thread):
         threading.Thread.__init__(self)
      
      
-     
-    """00-00-00-03-02-01 """
+   
     def run(self):
         while True: 
-            self.measureLatency("00-00-00-00-00-01","00-00-00-00-01-01")
+            self.measureLatency("00-00-00-00-00-01","00-00-00-00-02-01")
         
 
     def handlePacketIn(self,event):
@@ -146,19 +146,32 @@ class Openflow(threading.Thread):
         """go through the list of connected switches, mapping between s1 and the dpid trim the input
         
         for core.connections print strpid"""
-        for switch in core.openflow.connections:
+        for switchDPID in self.switches:
             #print "Switch " + str(switch.dpid)
-            print pox.lib.util.dpid_to_str(switch.dpid)
-            if switchOne.strip() == pox.lib.util.dpid_to_str(switch.dpid):
-                s1 = switch
-            if switchTwo.strip() == pox.lib.util.dpid_to_str(switch.dpid):
-                s2 = switch
+            print pox.lib.util.dpid_to_str(switchDPID)
+            if switchOne.strip() == pox.lib.util.dpid_to_str(switchDPID):
+                s1 = self.switches[switchDPID]
+            if switchTwo.strip() == pox.lib.util.dpid_to_str(switchDPID):
+                s2 = self.switches[switchDPID]
                 
-        print switchOne+" is "+str(s1)
-        print switchTwo+" is "+str(s2)
+        """s1 and s2 is a switch object"""
         
-        measureSwitchOne = LatencyMeasurment(s1)
-        measureSwitchTwo = LatencyMeasurment(s2)
+        """sl looks up s2 with the mac address, and gets the right port """
+        print switchOne+" has "+str(s1.macToPort.keys())
+      
+        
+        
+        #switch 2 mac address
+        print switchOne+" is looking for Switch two:"+switchTwo
+        print "dictionary length: "+str(len(s1.macToPort))
+        for k,v in s1.macToPort.iteritems():
+            print k,v
+        print "--------------"
+        if switchTwo in s1.macToPort.values():
+            print "found"
+        
+        measureSwitchOne = LatencyMeasurment(s1.connection)
+        measureSwitchTwo = LatencyMeasurment(s2.connection)
         print "Round trip time to switch one: "+str(measureSwitchOne.roundTripTime)
         print "Round trip time to switch two: "+str(measureSwitchTwo.roundTripTime)
         self.timeS1 = measureSwitchOne.roundTripTime
@@ -170,9 +183,9 @@ class Openflow(threading.Thread):
         
         match = of.ofp_match()
         match.dl_type= 0001
-        self.sendLatencyFlowMod(s1)
+        self.sendLatencyFlowMod(s1.connection)
         time.sleep(1)
-        self.sendLatencyEthernetPacket(2,s1) #get port number from mac address
+        self.sendLatencyEthernetPacket(2,s1.connection) #get port number from mac address
         
         
         
