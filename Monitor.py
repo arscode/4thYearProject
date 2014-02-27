@@ -12,7 +12,7 @@ class Monitor(threading.Thread):
         threading.Thread.__init__(self)
         
         
-        
+    """go through openflow and sflow shared memory stuff and check for matches"""
     def run(self):
         while True:
             time.sleep(5)

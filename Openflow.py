@@ -13,15 +13,9 @@ from LatencyMeasurment import LatencyMeasurment
 from Switch import Switch
 
 
-#pass in connection
-
-
 
 class Openflow(threading.Thread):
 
-    
-    #should have way to send match objects to a switch thats just come online    
-    matches = []
     
     def __init__(self, schemas):
         #core.openflow.addListeners(self) # never ever have this line uncommented.
@@ -32,9 +26,26 @@ class Openflow(threading.Thread):
         self.schemas = schemas
         self.switches = {}
         threading.Thread.__init__(self)
-     
-     
+        
+        
+        coreOne = ("00-00-00-04-01-01",{"00-00-00-00-02-01":1,"00-00-00-01-02-01":2,"00-00-00-02-02-01":3,"00-00-00-03-02-1":4})
+        coreTwo = ("00-00-00-04-01-02",{"00-00-00-00-02-01":1,"00-00-00-01-02-01":2,"00-00-00-02-02-01":3,"00-00-00-03-02-1":4})
+        coreThree = ("00-00-00-04-02-01",{"00-00-00-00-03-01":1,"00-00-00-01-03-01":2,"00-00-00-02-03-01":3,"00-00-00-03-03-1":4})
+        coreFour = ("00-00-00-04-02-02",{"00-00-00-00-03-01":1,"00-00-00-01-03-01":2,"00-00-00-02-03-01":3,"00-00-00-03-03-1":4})
+        
+        aggregateOne = ("00-00-00-00-02-01",{"00-00-00-04-01-01":1,"00-00-00-00-00-01":2,"00-00-00-04-01-02":3,"00-00-00-00-01-01":4})
+        aggregateTwo = ("00-00-00-00-03-01",{"00-00-00-04-02-01":1,"00-00-00-00-00-01":2,"00-00-00-04-02-02":3,"00-00-00-00-01-01":4})
+        aggregateThree = ("00-00-00-01-02-01",{"00-00-00-04-01-01":1,"00-00-00-01-00-01":2,"00-00-00-04-01-02":3,"00-00-00-01-01-01":4})
+        
+        aggregateFour = ("00-00-00-01-03-01",{"00-00-00-04-02-01":1,"00-00-00-00-00-01":2,"00-00-00-04-02-02":3,"00-00-00-01-01-01":4})
+        aggregateFive = ("00-00-00-02-02-01",{"00-00-00-04-02-01":1,"00-00-00-00-00-01":2,"00-00-00-04-02-02":3,"00-00-00-01-01-01":4})
+        aggregateSix = ("00-00-00-02-03-01",{"00-00-00-04-02-01":1,"00-00-00-00-00-01":2,"00-00-00-04-02-02":3,"00-00-00-01-01-01":4})
+        aggregateSeven = ("00-00-00-03-02-01",{"00-00-00-04-02-01":1,"00-00-00-00-00-01":2,"00-00-00-04-02-02":3,"00-00-00-01-01-01":4})
+        aggregateEight = ("00-00-00-03-03-01",{"00-00-00-04-02-01":1,"00-00-00-00-00-01":2,"00-00-00-04-02-02":3,"00-00-00-01-01-01":4})
    
+        self.switchMap = [coreOne,coreTwo,coreThree,coreFour,aggregateOne,aggregateTwo,aggregateThree]
+    
+    
     def run(self):
         while True: 
             self.measureLatency("00-00-00-02-00-01","00-00-00-02-03-01")
@@ -52,30 +63,11 @@ class Openflow(threading.Thread):
             print "total " + str(tTotal)
             """this is one way, not rtt, like ping is"""
             print "latency between switch one and switch two is: "+str(latency)
-             
-            
-        """
-        packetRequest = Schema()
-        packetRequest.fromPacket(packet)
-
-        when packet is received, go through all requests to see who's interested
-        for originalRequest in self.schemas.schemas:
-
-
-            if originalRequest.equals(packetRequest):
-                print "application "+str(originalRequest.application)+" wanted "+str(originalRequest.openflow.items())
-                print "found: " + str(packetRequest.openflow.items())
-                print "\n\n"
-
-        """
-
-            
-
-    
+              
 
 
     def handleConnectionUp(self,event):
-        self.switches[event.connection.dpid] =  Switch(event.connection)
+        self.switches[event.connection.dpid] =  event.connection
         
 
     def handleConnectionDown(self,event):
@@ -136,8 +128,11 @@ class Openflow(threading.Thread):
         
         
     """sometimes the second switch has a much lower time. maybe cache concerns
-       
+       use list of switches to find out what port to use
        eventually have a list of links that openflow needs to measure, based on schemas
+       
+       have a dictionary of tuple of two switches as key, time as value
+       put this dictionary as shared memory
        """    
     def measureLatency(self,switchOne, switchTwo):  
         self.TimeTotal = 0 #time between controller, s1, s2
@@ -159,8 +154,8 @@ class Openflow(threading.Thread):
         
        
         
-        measureSwitchOne = LatencyMeasurment(s1.connection)
-        measureSwitchTwo = LatencyMeasurment(s2.connection)
+        measureSwitchOne = LatencyMeasurment(s1)
+        measureSwitchTwo = LatencyMeasurment(s2)
         print "Round trip time to switch one: "+str(measureSwitchOne.roundTripTime)
         print "Round trip time to switch two: "+str(measureSwitchTwo.roundTripTime)
         self.timeS1 = measureSwitchOne.roundTripTime
@@ -172,9 +167,12 @@ class Openflow(threading.Thread):
         
         match = of.ofp_match()
         match.dl_type= 0001
-        self.sendLatencyFlowMod(s1.connection)
+        self.sendLatencyFlowMod(s1)
         time.sleep(1)
-        self.sendLatencyEthernetPacket(3,s1.connection) #get port number from mac address
+        print str(s1)[1:-3] +"wants to find the port number for "+str(s2)[1:-3]
+        #print "Found: "+self.switchMap[]
+       # pox.lib.util.dpid_to_str
+        self.sendLatencyEthernetPacket(3,s1) #get port number from mac address
         
         
    
