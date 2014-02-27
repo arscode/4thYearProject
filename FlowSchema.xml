@@ -61,6 +61,7 @@ Transport destination port/ICMP code 16 bits
 		<xs:element name = "milliseconds" type="xs:integer" minOccurs = "1"/>
 		<xs:element name = "firstMac" type="xs:string" minOccurs = "1"/>
 		<xs:element name = "secondMac" type="xs:string" minOccurs = "1"/>
+		<xs:element name = "moreOrLess" type ="xs:integer" minOccurs = "1"/>
 		</xs:sequence>
 		
 	</xs:complexType>

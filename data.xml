@@ -25,6 +25,9 @@
 	<secondMac>
 	00-00-00-00-00-01
 	</secondMac>
+	<moreOrLess>
+	1
+	</moreOrLess>
 </latency>
 
 </request>

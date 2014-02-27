@@ -48,8 +48,9 @@ class Schema:
         if tree.xpath("latency"):
             firstMac = (tree.xpath("latency/firstMac")[0].text).strip()
             secondMac = (tree.xpath('latency/secondMac')[0].text).strip()
-            value = int (tree.xpath('latency/milliseconds')[0].text)
-            self.latency = ((firstMac,secondMac),value)
+            time = int (tree.xpath('latency/milliseconds')[0].text)
+            type = int (tree.xpath('latency/moreOrLess')[0].text)
+            self.latency = ((firstMac,secondMac),time,type)
 
 
     def fromPacket(self, packet):

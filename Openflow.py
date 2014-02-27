@@ -26,6 +26,8 @@ class Openflow(threading.Thread):
         self.schemas = schemas.schemas
         self.switches = {}
         self.currentSwitches = []
+        self.currentLatency = 0
+        self.latencyType = 0
         self.results = {}
         self.links = []
         threading.Thread.__init__(self)
@@ -51,9 +53,13 @@ class Openflow(threading.Thread):
     
     def run(self):
         while True:
-             for switches  in self.links:
-                 time.sleep(1) #"""need to give packets time to be sent. limitation."""
-                 self.measureLatency(switches[0],switches[1])
+             for s  in self.schemas: #"""need to give packets time to be sent. limitation."""
+                 if s.latency:
+                     time.sleep(1)
+                     switches = s.latency[0]
+                     self.measureLatency(switches[0],switches[1])
+                     self.currentLatency = s.latency[1]
+                     self.latencyType = s.latency[2]
                  
             #self.measureLatency("00-00-00-00-02-01","")
             
@@ -71,16 +77,18 @@ class Openflow(threading.Thread):
             finish = time.time()
             tTotal = finish - self.timeStamp 
             latency = tTotal -((self.timeS1/2) + (self.timeS2/2))
-           # print "switch one "+ str(self.timeS1/2)
-            #print "switch two "+ str(self.timeS2/2)
-            #print "total " + str(tTotal)
+          
             """this is one way, not rtt, like ping is"""
-            #print "latency between switch one and switch two is: "+str(latency)
-            #print "results"
-            #print (self.currentSwitches,latency)
-           # if (self.currentSwitches,latency) not in self.results:
-                #self.results.append((self.currentSwitches,latency))
-            self.results[self.currentSwitches] = latency
+            #print "latency threshold", str(self.currentLatency)
+            #print "actual latency", str(latency*1000)
+           
+            """0 for less, 1 for more"""
+            if(self.latencyType==0):   
+                if(latency * 1000) <= self.currentLatency:
+                        self.results[self.currentSwitches] = latency
+            else:
+                if(latency*1000) >= self.currentLatency:
+                    self.results[self.currentSwitches] = latency
 
     def handleConnectionUp(self,event):
         self.switches[event.connection.dpid] =  event.connection
