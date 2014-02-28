@@ -159,7 +159,7 @@ class Sflow(threading.Thread):
             connection = httplib.HTTPConnection("localhost",8008)
             connection.request("PUT",url,payload)
 	    response = connection.getresponse()
-            print response.status
+            
 
      
     def getFlow(self,name):
@@ -169,7 +169,7 @@ class Sflow(threading.Thread):
         connection.request("GET",url," ")
         response = connection.getresponse()
 
-        print "getting flow "+name
+        #print "getting flow "+name
         return json.loads(response.read())
         """need to get keys not info in json. check flow using name and return the keys myself
            so get back the bytes and port number, but not protocol. get this from flow
@@ -190,7 +190,7 @@ class Sflow(threading.Thread):
                 for original in self.schemas.schemas:
                     if original.equals(schema):
 
-                        print "sflow match"
+                     
 
                         self.recentMatches.append(schema)
             #print "checking "+f[2]

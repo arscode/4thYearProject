@@ -6,10 +6,11 @@ import time
 class Monitor(threading.Thread):
     
     
-    def __init__(self,sflow,openflow):
+    def __init__(self,sflow,openflow,schemas):
         self.sflow = sflow
         self.openflow = openflow
         threading.Thread.__init__(self)
+        self.schemas = schemas.schemas
         
         
     """go through openflow and sflow shared memory stuff and check for matches
@@ -18,14 +19,40 @@ class Monitor(threading.Thread):
     def run(self):
         while True:
             time.sleep(5)
-            print "results from sflow and openflow"
-            for recentMatch in self.sflow.recentMatches:
-                print recentMatch.openflow.items()
+            #print "results from sflow and openflow"
+            #for recentMatch in self.sflow.recentMatches:
+                #print recentMatch.openflow.items()
             
-            print self.openflow.results
+            
+            
+            
+            for schema in self.schemas:
+                if schema.openflow:
+                    """if it has sflow attributes, and there not in recent matches, there wasn't a match
+                    might have to loop through and use equals method"""
+                    match = False
+                    print "has sflow items"
+                    for s in self.sflow.recentMatches:
+                        if  s.equals(schema):
+                            match = True
+                    if not match: #no results from sflow stuff
+                        continue
+                    print "sflow match"
                 
-            #for recentLatencyMatch in self.openflow.results.keys():
-               # print str(recentLatencyMatch) + " "+ str(self.openflow.results[recentLatencyMatch])
+                if schema.latency: #has latency info but not match, return
+                    if schema.latency[0] not in self.openflow.results:
+                        continue
+                    else: #if the type is 1, wanting more , and the results are ther
+                        if(schema.latency[2]==1) and  not (self.openflow.results[schema.latency[0]] > schema.latency[1]):
+                            continue
+                
+                """if code gets here, schema has matched."""
+                print "notify application ",schema.application
+                print schema
+                    
+                
+             
+            
         
     
 

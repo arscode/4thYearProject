@@ -40,7 +40,7 @@ openflow = Openflow(schemas)
 openflow.start()
 sflow = Sflow(schemas)
 sflow.start()
-monitor = Monitor(sflow,openflow)
+monitor = Monitor(sflow,openflow,schemas)
 monitor.start()
 """another infinite loop means it needs its own thread so it doesn't stop routing"""
     
