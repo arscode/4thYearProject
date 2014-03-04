@@ -1,7 +1,9 @@
 """takes in a threshold, defines a flow to monitor it, defines threshold, periodically polls
    if threshold exceeded, time stamp and block ip. later on, unblock ips again"""
 
-class DDoSPrevention:
+import Threading
+
+class DDoSPrevention(Threading.thread):
     
     
     def __init__(self,threshold):
@@ -27,6 +29,15 @@ class DDoSPrevention:
         connection = httplib.HTTPConnection("localhost",8008)
         connection.request("PUT",url,payload)
         return connection.getresponse() #do error checking
+    
+    
+    def monitor(self):
+        url = "/events/json?eventID=4&timeout=60"
+        connection = httplib.HTTPConnection("localhost",8008)
+        connection.request("GET",url," ")
+        response = connection.getresponse()
+        events = json.loads(response.read())
+        print events
         
         
     

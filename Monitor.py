@@ -23,7 +23,7 @@ class Monitor(threading.Thread):
                     """if it has sflow attributes, and there not in recent matches, there wasn't a match
                     might have to loop through and use equals method"""
                     match = False
-                    print "has sflow items"
+                    #print "has sflow items"
                     for s in self.sflow.recentMatches:
                         if  s.equals(schema):
                             match = True

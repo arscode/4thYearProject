@@ -3,16 +3,20 @@ from pox.core import core
 from pox.lib.addresses import EthAddr
 import openflow.libopenflow_01 as of
 import pox.openflow.nicira as nx
-import threading
+
 import time
 import pox.lib.packet as pkt
 import pox.lib.util
 
 from Schema import Schema
-from LatencyMeasurment import LatencyMeasurment
+from LatencyMeasurement import LatencyMeasurement
 from Switch import Switch
 
+import threading
+    
+#https://stackoverflow.com/questions/13193278/understand-python-threading-bug
 
+"""l3_learning byitself works"""
 
 class Openflow(threading.Thread):
 
@@ -62,8 +66,8 @@ class Openflow(threading.Thread):
              
     
     def processLatencyRequest(self,schema):
-        switches = schema[0]
-        linkLatency = LatencyMeasurement(switches[0],switches[1])
+        switches = schema.latency[0]
+        linkLatency = LatencyMeasurement(switches[0],switches[1],self.switches)
         while linkLatency.latency==0:
             pass
         latency = linkLatency.latency

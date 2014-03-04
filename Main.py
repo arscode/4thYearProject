@@ -27,31 +27,32 @@ def getFiles():
     return xmlFiles
 
 
-def updateFiles():
+def updateFiles(new,old):
     return None
     
 
 
-oldFiles = getFiles()
-schemas = SchemaStore(oldFiles)
-schemas.printSchemas()
+def launch():
+    print "launching controller..."
+    oldFiles = getFiles()
+    schemas = SchemaStore(oldFiles)
+    schemas.printSchemas()
 
-"""fix parsing, get flows to work. work on architecture. make canonical topology, with ip addresses.
-     switch to layer 3 routing. check latency properly, testing different maounts
-      and cleearing the ARP cache. then combine flows with latency """
+
     
-openflow = Openflow(schemas)
-openflow.start()
-sflow = Sflow(schemas)
-sflow.start()
-monitor = Monitor(sflow,openflow,schemas)
-monitor.start()
+    openflow = Openflow(schemas)
+    openflow.start()
+    sflow = Sflow(schemas)
+    sflow.start()
+    monitor = Monitor(sflow,openflow,schemas)
+    monitor.start()
+    
+    
+"""putting an infinite loop in main breaks EVERYTHING. mostly pox.core.openflow compoenent registrting"""
 
-while True:
-    time.sleep(3000) #check every 5 mins for new schemas
-    newFiles = getFiles()
-    changedFiles = updateFiles(newFiles,oldFiles)
-    if changedFiles:
+
+"""
+    if changedFiles is not None:
         print "updating schemas..."
         schemas = SchemaStore(changedFiles)
         openflow = Openflow(schemas)
@@ -59,7 +60,7 @@ while True:
         sflow = Sflow(schemas)
         sflow.start()
         monitor = Monitor(sflow,openflow,schemas)
-        monitor.start()
+        monitor.start() """
     
 
   
