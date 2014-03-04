@@ -13,19 +13,11 @@ class Monitor(threading.Thread):
         self.schemas = schemas.schemas
         
         
-    """go through openflow and sflow shared memory stuff and check for matches
-       create a schema from values, and
-        for every schema, go through all the openflow/sflow stuff and see if it matches everything"""
+
     def run(self):
         while True:
             time.sleep(5)
-            #print "results from sflow and openflow"
-            #for recentMatch in self.sflow.recentMatches:
-                #print recentMatch.openflow.items()
-            
-            
-            
-            
+           
             for schema in self.schemas:
                 if schema.openflow:
                     """if it has sflow attributes, and there not in recent matches, there wasn't a match

@@ -21,15 +21,8 @@ class LatencyMeasurment():
                 s1 = self.switches[switchDPID]
             if switchTwo.strip() == pox.lib.util.dpid_to_str(switchDPID):
                 s2 = self.switches[switchDPID]
-                
-        """s1 and s2 is a switch object"""
-        s1MAC = (str(s1)[1:-3]).strip()
-        s2MAC = (str(s2)[1:-3]).strip()
-        outPort = None
-       # print  s1MAC +" wants to find the port number for "+s2MAC
-        for s in self.switchMap:
-            if (s[0]).strip() == s1MAC:
-                outPort = s[1][s2MAC]
+        outPort = self.getOutPort(s1, s2)      
+       
         
         core.openflow.addListenerByName("PacketIn",self.handlePacketIn)
         core.openflow.addListenerByName("FlowStatsReceived",self.handleStatsReply)
@@ -98,12 +91,37 @@ class LatencyMeasurment():
         if ether and ether.type==0001: 
             finish = time.time()
             tTotal = finish - self.timeStamp 
-            self.latency = tTotal -((self.timeS1/2) + (self.timeS2/2))
+            self.latency = tTotal -((self.switchOneRTT/2) + (self.switchTwoRTT/2))
             
             
             
+    """put in switch objects, get outport back"""
+    def getOutPort(self,s1,s2):
+        coreOne = ("00-00-00-04-01-01",{"00-00-00-00-02-01":1,"00-00-00-01-02-01":2,"00-00-00-02-02-01":3,"00-00-00-03-02-1":4})
+        coreTwo = ("00-00-00-04-01-02",{"00-00-00-00-02-01":1,"00-00-00-01-02-01":2,"00-00-00-02-02-01":3,"00-00-00-03-02-1":4})
+        coreThree = ("00-00-00-04-02-01",{"00-00-00-00-03-01":1,"00-00-00-01-03-01":2,"00-00-00-02-03-01":3,"00-00-00-03-03-1":4})
+        coreFour = ("00-00-00-04-02-02",{"00-00-00-00-03-01":1,"00-00-00-01-03-01":2,"00-00-00-02-03-01":3,"00-00-00-03-03-1":4})
+        
+        aggregateOne = ("00-00-00-00-02-01",{"00-00-00-04-01-01":1,"00-00-00-00-00-01":2,"00-00-00-04-01-02":3,"00-00-00-00-01-01":4})
+        aggregateTwo = ("00-00-00-00-03-01",{"00-00-00-04-02-01":1,"00-00-00-00-00-01":2,"00-00-00-04-02-02":3,"00-00-00-00-01-01":4})
+        aggregateThree = ("00-00-00-01-02-01",{"00-00-00-04-01-01":1,"00-00-00-01-00-01":2,"00-00-00-04-01-02":3,"00-00-00-01-01-01":4})
+        aggregateFour = ("00-00-00-01-03-01",{"00-00-00-04-02-01":1,"00-00-00-01-00-01":2,"00-00-00-04-02-02":3,"00-00-00-01-01-01":4})
+        aggregateFive = ("00-00-00-02-02-01",{"00-00-00-04-01-01":1,"00-00-00-02-00-01":2,"00-00-00-04-01-02":3,"00-00-00-02-01-01":4})
+        aggregateSix = ("00-00-00-02-03-01",{"00-00-00-04-02-01":1,"00-00-00-02-00-01":2,"00-00-00-04-02-02":3,"00-00-00-02-01-01":4})
+        aggregateSeven = ("00-00-00-03-02-01",{"00-00-00-04-01-01":1,"00-00-00-03-00-01":2,"00-00-00-04-01-02":3,"00-00-00-03-01-01":4})
+        aggregateEight = ("00-00-00-03-03-01",{"00-00-00-04-02-01":1,"00-00-00-03-00-01":2,"00-00-00-04-02-02":3,"00-00-00-03-01-01":4})
+   
+        switchMap = [coreOne,coreTwo,coreThree,coreFour,aggregateOne,aggregateTwo,aggregateThree,aggregateFour,aggregateFive,aggregateSix,aggregateSeven,aggregateEight]        
             
-            
+        """s1 and s2 is a switch object"""
+        s1MAC = (str(s1)[1:-3]).strip()
+        s2MAC = (str(s2)[1:-3]).strip()
+        outPort = None
+       # print  s1MAC +" wants to find the port number for "+s2MAC
+        for s in self.switchMap:
+            if (s[0]).strip() == s1MAC:
+                return s[1][s2MAC]
+        return None
             
             
             
