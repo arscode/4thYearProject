@@ -13,10 +13,8 @@ from LatencyMeasurement import LatencyMeasurement
 from Switch import Switch
 
 import threading
-    
-#https://stackoverflow.com/questions/13193278/understand-python-threading-bug
 
-"""l3_learning byitself works"""
+
 
 class Openflow(threading.Thread):
 
@@ -33,6 +31,9 @@ class Openflow(threading.Thread):
         self.links = []
         threading.Thread.__init__(self)
         self.getLinks()
+        
+        
+       
         
         
         

@@ -16,19 +16,6 @@ import threading
 from Schema import Schema
 
 
-
-
-    
-
-        
-
-
- 
-        
-        
-
-        
-
 class Sflow(threading.Thread):
     def __init__(self,schemas):
         self.collectorIP = "127.0.0.1"

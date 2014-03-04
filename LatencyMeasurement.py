@@ -1,21 +1,18 @@
 
 
-"""because I want to encapsulate all the latency measurement stuff
-   I have to do use a dedicated class for it
-   cant just have one method, because I need to handle the stats recieved event
-   measure latency for one single switch """
+
 import time
 import openflow.libopenflow_01 as of
 from pox.core import core
 import pox.lib.util
 
-"""call this in the run method. forget about latency tpye, just return raw results"""
+
    
 class LatencyMeasurement():
     
     def __init__(self,switchOne,switchTwo,switches):
         self.switches = switches
-        print "switches: ",self.switches
+        print "nexus: ", core.openflow
         s1 = None
         s2 = None
         

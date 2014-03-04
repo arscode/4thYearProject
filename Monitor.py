@@ -1,6 +1,7 @@
 
 import threading
 import time
+from DDoSPrevention import DDoSPrevention
 
 """in own thread, so it doesn't stop routing"""
 class Monitor(threading.Thread):
@@ -11,6 +12,8 @@ class Monitor(threading.Thread):
         self.openflow = openflow
         threading.Thread.__init__(self)
         self.schemas = schemas.schemas
+        d = DDoSPrevention("1000")
+        
         
         
 
