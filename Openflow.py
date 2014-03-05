@@ -22,6 +22,7 @@ class Openflow(threading.Thread):
     def __init__(self, schemas):
         #core.openflow.addListeners(self) # never ever have this line uncommented.
         #core.openflow.addListenerByName("PacketIn",self.handlePacketIn)
+        print "nexus: ", core.openflow.connections
         core.openflow.addListenerByName("PortStatus",self.showPortStatus)
         core.openflow.addListenerByName("ConnectionUp",self.handleConnectionUp)
         core.openflow.addListenerByName("ConnectionDown",self.handleConnectionDown)

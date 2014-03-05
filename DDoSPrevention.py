@@ -38,6 +38,7 @@ class DDoSPrevention(threading.Thread):
     
     
     def monitor(self):
+        time.sleep(1)
         for ip,time in self.ips.iteritems():
             if (time.time()-time) >(120): #two minutes
                 ips.remove(ip) #take it out of current list of ips being blocked

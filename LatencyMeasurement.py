@@ -12,38 +12,29 @@ class LatencyMeasurement():
     
     def __init__(self,switchOne,switchTwo,switches):
         self.switches = switches
-        print "nexus: ", core.openflow
-        s1 = None
-        s2 = None
-        
-        
-        
-        for switchDPID in core.openflow.connections:
-            print "here"
-            print switchDPID
-            if switchOne.strip() == pox.lib.util.dpid_to_str(switchDPID):
-                s1 = self.switches[switchDPID]
-            if switchTwo.strip() == pox.lib.util.dpid_to_str(switchDPID):
-                s2 = self.switches[switchDPID]
-                
-        outPort = self.getOutPort(s1, s2)      
-       
-        
+        self.latency = 0
         core.openflow.addListenerByName("PacketIn",self.handlePacketIn)
         core.openflow.addListenerByName("FlowStatsReceived",self.handleStatsReply)
-        self.latency = 0
+        print "nexus: ", core.openflow
         
+        s1 = self.getSwitchFromMAC(switchOne)
+        s2 = self.getSwitchFromMAC(switchTwo)        
+        outPort = self.getOutPort(s1, s2)      
     
         self.switchOneRTT = self.measureLatency(s1)
         self.switchTwoRTT = self.measureLatency(s2)
         
         self.sendLatencyFlowMod(switchOne)
-        time.sleep(1)
+        time.sleep(1) #give the flow mod chance to arrives
         self.sendLatencyEthernetPacket(outPort, switchOne)
+      
+    """get a reference to the switch datapath"""  
+    def getSwitchFromMAC(self,mac):
+            for switchDPID in core.openflow.connections:
+                if mac.strip() == pox.lib.util.dpid_to_str(switchDPID):
+                    return self.switches[switchDPID]   
         
-        
-        
-        
+
     def sendStatsRequest(self,switch):
         startTime = time.time() 
         switch.send(of.ofp_stats_request(body=of.ofp_flow_stats_request()))
@@ -77,17 +68,16 @@ class LatencyMeasurement():
     """maybe put specific links as well, in the packet, so can measure a lot at once"""
     def sendLatencyEthernetPacket(self,outPort,switch):
         ether = pkt.ethernet()
-        #effective_ethertype
-        ether.type = 0001 #arbitary type, taken from paper
+        ether.type = 0001 #arbitary type
         ether.dst = EthAddr("ff:ff:ff:ff:ff:ff")
         ether.src = EthAddr("01:02:03:04:05:06")
+        
         msg = of.ofp_packet_out()
         action = of.ofp_action_output(port=outPort)
         msg.actions.append(action)
+        
         self.timeStamp= time.time()
-    
         msg.data = ether
-        print "sending ethernet packet"
         switch.send(msg)
         
     def handlePacketIn(self,event):
@@ -121,7 +111,7 @@ class LatencyMeasurement():
         """s1 and s2 is a switch object"""
         s1MAC = (str(s1)[1:-3]).strip()
         s2MAC = (str(s2)[1:-3]).strip()
-        outPort = None
+        
         #print  s1MAC +" wants to find the port number for "+s2MAC
         for s in switchMap:
             if (s[0]).strip() == s1MAC:

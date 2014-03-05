@@ -41,7 +41,10 @@ class MyComponent():
         monitor = Monitor(sflow,openflow,schemas)
         monitor.start()
 
+"""what is the difference between my component and a built in one? something is stopping switch 
+-controller communication"""
 def launch():
+
     import pox.samples.pretty_log
     pox.samples.pretty_log.launch()
     print "launching controller..."
