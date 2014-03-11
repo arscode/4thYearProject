@@ -12,10 +12,11 @@ class DDoSPrevention(threading.Thread):
     
     
     def __init__(self,threshold):
+        self.ips = {}
         self.pushMonitoringFlow()
         self.pushThreshold(threshold)
         self.monitor()
-        self.ips = {}
+        
         
         
         
@@ -39,13 +40,12 @@ class DDoSPrevention(threading.Thread):
     
     def monitor(self):
         time.sleep(1)
-        for ip,time in self.ips.iteritems():
-            if (time.time()-time) >(120): #two minutes
+        for ip,timeStamp in self.ips.iteritems():
+            if (time.time()-timeStamp) >(120): #two minutes
                 ips.remove(ip) #take it out of current list of ips being blocked
                 self.unblock(ip)
                 
-        self.checkThreshold()
-        for ip in ips:
+        for ip in self.checkThreshold():
             self.block(ip)
         
         
@@ -62,7 +62,7 @@ class DDoSPrevention(threading.Thread):
             for event in events[0]["topKeys"]:
                 key = event["key"]
                 print key
-                if key not in self.ips:
+                if key not in self.ips: #why not just override?
                     self.ips[key] = time.time()
         return ips
     
