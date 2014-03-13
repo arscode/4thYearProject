@@ -7,6 +7,7 @@ import httplib
 import time
 import openflow.libopenflow_01 as of
 from pox.core import core
+from pox.lib.addresses import IPAddr
 
 
 class DDoSPrevention(threading.Thread):
@@ -56,7 +57,7 @@ class DDoSPrevention(threading.Thread):
             
         
         
-    
+    #check for event id, so make sure not adding duplicates
     """get list of ips that are above the threshold
         add them to a list of ips currently being blocked
         and return a list of new naughty ips to block"""
@@ -67,26 +68,29 @@ class DDoSPrevention(threading.Thread):
         connection.request("GET",url," ")
         response = connection.getresponse()
         events = json.loads(response.read())
-        print events
+        
         newips = []
         if len(events)> 0:
-            for event in events[0]["topKeys"]:
-                key = event["key"]
-                print key
-                newips.append(key)
-                if key not in self.ips: #why not just override?
-                    self.ips[key] = time.time()
+            for event in events:
+                print event
+                if event["metric"] == "ddos":
+                    ipaddr = event["agent"]
+                    print ipaddr
+                    newips.append(ipaddr)
+                    if ipaddr not in self.ips: #why not just override?
+                        self.ips[ipaddr] = time.time()
 
         return newips
     
     
     def block(self,ip):
-        msg = of.ofp_packet_out()
-        action = of.ofp_action_output(port=OFPP_NONE)
+        msg = of.ofp_flow_mod()
+        action = of.ofp_action_output(port=of.OFPP_NONE)
         msg.actions.append(action)
         match = of.ofp_match()
-        match.nw_src = ip #make sure ip is correct here
+        match.nw_src = IPAddr(ip) #make sure ip is correct here
         msg.match = match
+        print msg
         for connection in core.openflow.connections:
             connection.send(msg)
     
@@ -95,7 +99,7 @@ class DDoSPrevention(threading.Thread):
         do it for me first."""
     def unblock(self,ip):
         msg = of.ofp_packet_out()
-        action = of.ofp_action_output(port=OFPP_CONTROLLER)
+        action = of.ofp_action_output(port=of.OFPP_CONTROLLER)
         msg.actions.append(action)
         match = of.ofp_match()
         match.nw_src = ip #make sure ip is correct here
