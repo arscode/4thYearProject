@@ -44,7 +44,7 @@ class Openflow(threading.Thread):
         while True:
              for s  in self.schemas: 
                  if s.latency:
-                     time.sleep(1) # so different packets are not mixed up
+                     time.sleep(3) # so different packets are not mixed up
                      self.processLatencyRequest(s)
                  
             #self.measureLatency("00-00-00-00-02-01","")

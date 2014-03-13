@@ -5,7 +5,8 @@ import time
 import openflow.libopenflow_01 as of
 from pox.core import core
 import pox.lib.util
-
+import pox.lib.packet as pkt
+from pox.lib.addresses import EthAddr
 
    
 class LatencyMeasurement():
@@ -15,28 +16,31 @@ class LatencyMeasurement():
         self.latency = 0
         core.openflow.addListenerByName("PacketIn",self.handlePacketIn)
         core.openflow.addListenerByName("FlowStatsReceived",self.handleStatsReply)
-        print "nexus: ", core.openflow
+
         
         s1 = self.getSwitchFromMAC(switchOne)
-        s2 = self.getSwitchFromMAC(switchTwo)        
+        s2 = self.getSwitchFromMAC(switchTwo)      
+
         outPort = self.getOutPort(s1, s2)      
     
         self.switchOneRTT = self.measureLatency(s1)
         self.switchTwoRTT = self.measureLatency(s2)
         
-        self.sendLatencyFlowMod(switchOne)
-        time.sleep(1) #give the flow mod chance to arrives
-        self.sendLatencyEthernetPacket(outPort, switchOne)
+        self.sendLatencyFlowMod(s1)
+        time.sleep(1) #give the flow mod chance to arrive
+        self.sendLatencyEthernetPacket(outPort, s1)
       
     """get a reference to the switch datapath"""  
     def getSwitchFromMAC(self,mac):
-            for switchDPID in core.openflow.connections:
+            for switchDPID in self.switches.iterkeys():
                 if mac.strip() == pox.lib.util.dpid_to_str(switchDPID):
+                    print self.switches[switchDPID]
                     return self.switches[switchDPID]   
         
 
     def sendStatsRequest(self,switch):
         startTime = time.time() 
+        print "sending to ",switch
         switch.send(of.ofp_stats_request(body=of.ofp_flow_stats_request()))
         return startTime
         
@@ -55,8 +59,8 @@ class LatencyMeasurement():
         
     def handleStatsReply(self,event):
         #should be the only stats reply, but check anyway
-        if event.connection == self.switch:
-            self.endTime = time.time()
+        #if event.connection == self.switch:
+        self.endTime = time.time()
             
             
     def sendLatencyFlowMod(self,switch):

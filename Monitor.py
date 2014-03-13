@@ -1,53 +1,31 @@
 
 import threading
 import time
-from DDoSPrevention import DDoSPrevention
 
 """in own thread, so it doesn't stop routing"""
 class Monitor(threading.Thread):
     
     
-    def __init__(self,sflow,openflow,schemas):
+    def __init__(self,sflow,openflow):
         self.sflow = sflow
         self.openflow = openflow
         threading.Thread.__init__(self)
-        self.schemas = schemas.schemas
-        d = DDoSPrevention("1000")
         
         
-        
-
+    """go through openflow and sflow shared memory stuff and check for matches
+       create a schema from values, and
+        for every schema, go through all the openflow/sflow stuff and see if it matches everything"""
     def run(self):
         while True:
             time.sleep(5)
-           
-            for schema in self.schemas:
-                if schema.openflow:
-                    """if it has sflow attributes, and there not in recent matches, there wasn't a match
-                    might have to loop through and use equals method"""
-                    match = False
-                    #print "has sflow items"
-                    for s in self.sflow.recentMatches:
-                        if  s.equals(schema):
-                            match = True
-                    if not match: #no results from sflow stuff
-                        continue
-                    print "sflow match"
-                
-                if schema.latency: #has latency info but not match, return
-                    if schema.latency[0] not in self.openflow.results:
-                        continue
-                    else: #if the type is 1, wanting more , and the results are ther
-                        if(schema.latency[2]==1) and  not (self.openflow.results[schema.latency[0]] > schema.latency[1]):
-                            continue
-                
-                """if code gets here, schema has matched."""
-                print "notify application ",schema.application
-                print schema
-                    
-                
-             
             
+            for recentMatch in self.sflow.recentMatches:
+                print recentMatch.openflow.items()
+            
+            print self.openflow.results
+                
+            #for recentLatencyMatch in self.openflow.results.keys():
+               # print str(recentLatencyMatch) + " "+ str(self.openflow.results[recentLatencyMatch])
         
     
 

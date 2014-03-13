@@ -81,7 +81,7 @@ class Schema:
     def fromJSON(self,data):
         #strip u
 
-        
+        print "parsing json"
         for key, value in data[0].iteritems():
             if type(key)=='unicode':
                 key = key.encode('utf-8').decode('ascii')
@@ -90,7 +90,7 @@ class Schema:
            
            
             if value==u'80': #do this properly
-                
+                print "key equals 80"
                 self.openflow['destinationPort'] = int(value)
 
         #get key, find right openflow bit, put value in
