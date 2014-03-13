@@ -2,6 +2,7 @@
    if threshold exceeded, time stamp and block ip. later on, unblock ips again"""
 
 import threading
+import json
 import httplib
 import time
 import openflow.libopenflow_01 as of
@@ -12,10 +13,12 @@ class DDoSPrevention(threading.Thread):
     
     
     def __init__(self,threshold):
+        threading.Thread.__init__(self)
         self.ips = {}
         self.pushMonitoringFlow()
         self.pushThreshold(threshold)
-        self.monitor()
+        print "ips are ",self.ips
+       
         
         
         
@@ -32,39 +35,49 @@ class DDoSPrevention(threading.Thread):
     
     def pushThreshold(self,threshold):
         url = "/threshold/ddos/json"
-        payload = "{metric:'ddos',value:"+threshold+"}"
+        payload = "{metric:'ddos',value:"+str(threshold)+"}"
         connection = httplib.HTTPConnection("localhost",8008)
         connection.request("PUT",url,payload)
         return connection.getresponse() #do error checking
     
     
-    def monitor(self):
-        time.sleep(1)
-        for ip,timeStamp in self.ips.iteritems():
-            if (time.time()-timeStamp) >(120): #two minutes
-                ips.remove(ip) #take it out of current list of ips being blocked
-                self.unblock(ip)
-                
-        for ip in self.checkThreshold():
-            self.block(ip)
+    def run(self):
+        while True:
+            time.sleep(1)
+            print "monitoring for ddos"
+            for ip,timeStamp in self.ips.iteritems():
+               
+                if (time.time()-timeStamp) >(120): #two minutes
+                    ips.remove(ip) #take it out of current list of ips being blocked
+                    self.unblock(ip)
+             
+            for ip in self.checkThreshold():
+                self.block(ip)
+            
         
         
     
-    
+    """get list of ips that are above the threshold
+        add them to a list of ips currently being blocked
+        and return a list of new naughty ips to block"""
     def checkThreshold(self):
-        url = "/events/json?eventID=4&timeout=60"
+        
+        url = "/events/json"
         connection = httplib.HTTPConnection("localhost",8008)
         connection.request("GET",url," ")
         response = connection.getresponse()
         events = json.loads(response.read())
-        
+        print events
+        newips = []
         if len(events)> 0:
             for event in events[0]["topKeys"]:
                 key = event["key"]
                 print key
+                newips.append(key)
                 if key not in self.ips: #why not just override?
                     self.ips[key] = time.time()
-        return ips
+
+        return newips
     
     
     def block(self,ip):
