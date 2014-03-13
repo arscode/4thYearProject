@@ -45,11 +45,12 @@ class DDoSPrevention(threading.Thread):
     def run(self):
         while True:
             time.sleep(1)
-            print "monitoring for ddos"
-            for ip,timeStamp in self.ips.iteritems():
-               
-                if (time.time()-timeStamp) >(120): #two minutes
-                    ips.remove(ip) #take it out of current list of ips being blocked
+            
+            for ip in self.ips.keys():
+                timeStamp = self.ips[ip]
+                print ip,timeStamp
+                if (time.time()-timeStamp) >(10): #two minutes
+                    self.ips.pop(ip) #take it out of current list of ips being blocked
                     self.unblock(ip)
              
             for ip in self.checkThreshold():
@@ -72,12 +73,12 @@ class DDoSPrevention(threading.Thread):
         newips = []
         if len(events)> 0:
             for event in events:
-                print event
+                
                 if event["metric"] == "ddos":
                     ipaddr = event["agent"]
-                    print ipaddr
+                    
                     newips.append(ipaddr)
-                    if ipaddr not in self.ips: #why not just override?
+                    if ipaddr not in self.ips: #why not just override? because timestamp
                         self.ips[ipaddr] = time.time()
 
         return newips
@@ -90,7 +91,7 @@ class DDoSPrevention(threading.Thread):
         match = of.ofp_match()
         match.nw_src = IPAddr(ip) #make sure ip is correct here
         msg.match = match
-        print msg
+        print "blocking ",ip
         for connection in core.openflow.connections:
             connection.send(msg)
     
@@ -104,6 +105,7 @@ class DDoSPrevention(threading.Thread):
         match = of.ofp_match()
         match.nw_src = ip #make sure ip is correct here
         msg.match = match
+        print "unblocking ",ip
         for connection in core.openflow.connections:
             connection.send(msg)
         
