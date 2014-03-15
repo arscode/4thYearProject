@@ -31,13 +31,7 @@ class Openflow(threading.Thread):
         self.links = []
         threading.Thread.__init__(self)
         self.getLinks()
-        
-        
-       
-        
-        
-        
-    
+         
     
     def run(self):
         while True:

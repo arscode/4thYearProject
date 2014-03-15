@@ -48,13 +48,13 @@ class DDoSPrevention(threading.Thread):
             
             for ip in self.blockedIps.keys():
                 timeStamp = self.blockedIps[ip]
-                print ip,timeStamp
+                #print ip,timeStamp
                 if (time.time()-timeStamp) >(120): #two minutes
                     self.blockedIps.pop(ip) #take it out of current list of ips being blocked
                     self.unblock(ip)
             
             for ip in self.checkThreshold():
-                self.block(ip)
+                self.block(ip) 
             
         
         
@@ -63,24 +63,45 @@ class DDoSPrevention(threading.Thread):
         add them to a list of ips currently being blocked
         and return a list of new naughty ips to block"""
     def checkThreshold(self):
-        url = "/events/json"
+        url = "/events/json?maxEvents=10&timeout=60"
         connection = httplib.HTTPConnection("localhost",8008)
         connection.request("GET",url," ")
         response = connection.getresponse()
         events = json.loads(response.read())
-        
         newips = []
+
         if len(events)> 0:
             for event in events:
-                
-                if event["metric"] == "ddos":
-                    ipaddr = event["agent"]
-                    
-                    if ipaddr not in self.blockedIps: 
-                        newips.append(ipaddr)
-                        self.blockedIps[ipaddr] = time.time()
+                if event["metric"] == "ddos":   
+                    agent = event["agent"]
+                    sourceIP,destIP = self.getDetailedFlowInfo(agent)
+
+                    """check that a sourceIP was returned, and its not already being blocked"""
+                    if sourceIP and sourceIP not in self.blockedIps: 
+                        print "detected new attack from "+sourceIP+" to "+destIP
+                        newips.append(sourceIP)
+                        self.blockedIps[sourceIP] = time.time()
 
         return newips
+
+
+    """uses the agent ip addr to get more detailed flow info"""
+    def getDetailedFlowInfo(self,agent):
+        url = "/metric/"+str(agent)+"/ddos/json"
+        connection = httplib.HTTPConnection("localhost",8008)
+        connection.request("GET",url," ")
+        response = connection.getresponse()
+        attackerInfo = json.loads(response.read())
+        recentAttacks = attackerInfo[0]["topKeys"]
+        
+        ipaddresses = (recentAttacks[1]["key"]).split(',')
+        sourceIP = ipaddresses[0]
+        destIP = ipaddresses[1]
+        if sourceIP != "0.0.0.0" and sourceIP != "255.255.255.255":
+            #print recentAttacks
+            return sourceIP,destIP
+        return None
+
     
     
     def block(self,ip):
@@ -100,7 +121,7 @@ class DDoSPrevention(threading.Thread):
         action = of.ofp_action_output(port=of.OFPP_CONTROLLER)
         msg.actions.append(action)
         match = of.ofp_match()
-        match.nw_src = ip #make sure ip is correct here
+        match.nw_src = ip 
         msg.match = match
         print "unblocking ",ip
         for connection in core.openflow.connections:
