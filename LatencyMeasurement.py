@@ -34,13 +34,11 @@ class LatencyMeasurement():
     def getSwitchFromMAC(self,mac):
             for switchDPID in self.switches.iterkeys():
                 if mac.strip() == pox.lib.util.dpid_to_str(switchDPID):
-                    print self.switches[switchDPID]
                     return self.switches[switchDPID]   
         
 
     def sendStatsRequest(self,switch):
         startTime = time.time() 
-        print "sending to ",switch
         switch.send(of.ofp_stats_request(body=of.ofp_flow_stats_request()))
         return startTime
         

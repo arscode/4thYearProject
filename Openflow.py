@@ -22,7 +22,6 @@ class Openflow(threading.Thread):
     def __init__(self, schemas):
         #core.openflow.addListeners(self) # never ever have this line uncommented.
         #core.openflow.addListenerByName("PacketIn",self.handlePacketIn)
-        print "nexus: ", core.openflow.connections
         core.openflow.addListenerByName("PortStatus",self.showPortStatus)
         core.openflow.addListenerByName("ConnectionUp",self.handleConnectionUp)
         core.openflow.addListenerByName("ConnectionDown",self.handleConnectionDown)
@@ -47,7 +46,6 @@ class Openflow(threading.Thread):
                      time.sleep(3) # so different packets are not mixed up
                      self.processLatencyRequest(s)
                  
-            #self.measureLatency("00-00-00-00-02-01","")
             
             
     def getLinks(self):
@@ -58,7 +56,6 @@ class Openflow(threading.Thread):
 
 
     def handleConnectionUp(self,event):
-        print "switch up"
         self.switches[event.connection.dpid] =  event.connection
         
 
@@ -70,7 +67,8 @@ class Openflow(threading.Thread):
     def processLatencyRequest(self,schema):
         switches = schema.latency[0]
         linkLatency = LatencyMeasurement(switches[0],switches[1],self.switches)
-        while linkLatency.latency==0:
+
+        while linkLatency.latency==0: #wait for all the packets to be sent and handled
             pass
         latency = linkLatency.latency
         

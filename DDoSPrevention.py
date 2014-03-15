@@ -15,10 +15,10 @@ class DDoSPrevention(threading.Thread):
     
     def __init__(self,threshold):
         threading.Thread.__init__(self)
-        self.ips = {}
+        self.blockedIps = {}
         self.pushMonitoringFlow()
         self.pushThreshold(threshold)
-        print "ips are ",self.ips
+   
        
         
         
@@ -41,29 +41,28 @@ class DDoSPrevention(threading.Thread):
         connection.request("PUT",url,payload)
         return connection.getresponse() #do error checking
     
-    
+    """need a way to check that ip is already blocked. so not blocking it over and over"""
     def run(self):
         while True:
             time.sleep(1)
             
-            for ip in self.ips.keys():
-                timeStamp = self.ips[ip]
+            for ip in self.blockedIps.keys():
+                timeStamp = self.blockedIps[ip]
                 print ip,timeStamp
-                if (time.time()-timeStamp) >(10): #two minutes
-                    self.ips.pop(ip) #take it out of current list of ips being blocked
+                if (time.time()-timeStamp) >(120): #two minutes
+                    self.blockedIps.pop(ip) #take it out of current list of ips being blocked
                     self.unblock(ip)
-             
+            
             for ip in self.checkThreshold():
                 self.block(ip)
             
         
         
-    #check for event id, so make sure not adding duplicates
+    #in check threshold, call block if its not already in self.ips...and update self.ip
     """get list of ips that are above the threshold
         add them to a list of ips currently being blocked
         and return a list of new naughty ips to block"""
     def checkThreshold(self):
-        
         url = "/events/json"
         connection = httplib.HTTPConnection("localhost",8008)
         connection.request("GET",url," ")
@@ -77,9 +76,9 @@ class DDoSPrevention(threading.Thread):
                 if event["metric"] == "ddos":
                     ipaddr = event["agent"]
                     
-                    newips.append(ipaddr)
-                    if ipaddr not in self.ips: #why not just override? because timestamp
-                        self.ips[ipaddr] = time.time()
+                    if ipaddr not in self.blockedIps: 
+                        newips.append(ipaddr)
+                        self.blockedIps[ipaddr] = time.time()
 
         return newips
     
@@ -89,15 +88,13 @@ class DDoSPrevention(threading.Thread):
         action = of.ofp_action_output(port=of.OFPP_NONE)
         msg.actions.append(action)
         match = of.ofp_match()
-        match.nw_src = IPAddr(ip) #make sure ip is correct here
+        match.nw_src = IPAddr(ip) 
         msg.match = match
         print "blocking ",ip
         for connection in core.openflow.connections:
             connection.send(msg)
     
-    
-    """might have to be more complicated, and handle packetIn in my code. see if riplpox will
-        do it for me first."""
+   
     def unblock(self,ip):
         msg = of.ofp_packet_out()
         action = of.ofp_action_output(port=of.OFPP_CONTROLLER)
