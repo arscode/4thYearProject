@@ -10,7 +10,8 @@ class Monitor(threading.Thread):
     def __init__(self,sflow,openflow):
         self.sflow = sflow
         self.openflow = openflow
-        dos = DDoSPrevention(5)
+        """iperf reports over 9 gigs. """
+        dos = DDoSPrevention(1000)
         dos.start()
         threading.Thread.__init__(self)
 
@@ -24,9 +25,10 @@ class Monitor(threading.Thread):
             time.sleep(5)
             
             for recentMatch in self.sflow.recentMatches:
-                print recentMatch.openflow.items()
+                #print recentMatch.openflow.items()
+                pass
             
-            print self.openflow.results
+            #print self.openflow.results
                 
             #for recentLatencyMatch in self.openflow.results.keys():
                # print str(recentLatencyMatch) + " "+ str(self.openflow.results[recentLatencyMatch])

@@ -24,14 +24,14 @@ def getFiles():
         m = re.match(xmlPattern,fileName)
         if m and fileName != "FlowSchema.xml":
             xmlFiles += [m.group(0)]
-    print xmlFiles
+    print "\033[1m\033[37mLoaded schemas: "+str(xmlFiles)+"\033[0m"
     return xmlFiles
 
 
 
 
 schemas = SchemaStore(getFiles())
-schemas.printSchemas()
+#schemas.printSchemas()
 
 """fix parsing, get flows to work. work on architecture. make canonical topology, with ip addresses.
      switch to layer 3 routing. check latency properly, testing different maounts

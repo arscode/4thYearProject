@@ -79,9 +79,7 @@ class Schema:
 
 
     def fromJSON(self,data):
-        #strip u
-
-        print "parsing json"
+      
         for key, value in data[0].iteritems():
             if type(key)=='unicode':
                 key = key.encode('utf-8').decode('ascii')

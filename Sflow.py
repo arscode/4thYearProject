@@ -98,7 +98,7 @@ class Sflow(threading.Thread):
                 keys.append("vlandestination")
                 values.append("vlansource="+value)
                 values.append("vlandestination="+value)
-                
+
         return keys,values,schema.application
 
 
