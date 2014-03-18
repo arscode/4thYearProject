@@ -17,10 +17,9 @@ class DDoSPrevention(threading.Thread):
         threading.Thread.__init__(self)
         self.colours = {"RED":"\033[1m\033[31m","WHITE":"\033[1m\033[37m","GREEN":"\033[1m\033[32m","END":"\033[0m"}
 
+
         self.blockedIps = {}
         self.pushMonitoringFlow()
-        print "-------"
-        print str(threshold)
         self.pushThreshold(threshold)
 
 
@@ -54,14 +53,14 @@ class DDoSPrevention(threading.Thread):
             
             for ip in self.blockedIps.keys():
                 timeStamp = self.blockedIps[ip]
-                #print ip,timeStamp
+                print ip,timeStamp
                 if (time.time()-timeStamp) >(120): #two minutes
                     self.blockedIps.pop(ip) #take it out of current list of ips being blocked
                     self.unblock(ip)
-            
+           
             for ip in self.checkThreshold():
                 self.block(ip) 
-            
+           
         
         
     #in check threshold, call block if its not already in self.ips...and update self.ip
@@ -69,12 +68,14 @@ class DDoSPrevention(threading.Thread):
         add them to a list of ips currently being blocked
         and return a list of new naughty ips to block"""
     def checkThreshold(self):
-        url = "/events/json?maxEvents=10&timeout=60"
+        
+        url = "/events/json?maxEvents=10"
         connection = httplib.HTTPConnection("localhost",8008)
         connection.request("GET",url," ")
         response = connection.getresponse()
         events = json.loads(response.read())
         newips = []
+        
 
         if len(events)> 0:
             for event in events:
@@ -103,8 +104,7 @@ class DDoSPrevention(threading.Thread):
         connection.request("GET",url," ")
         response = connection.getresponse()
         attackerInfo = json.loads(response.read())
-       
-      
+     
 
         if not "topKeys" in attackerInfo[0]:
             #rint attackerInfo
@@ -153,10 +153,11 @@ class DDoSPrevention(threading.Thread):
         msg.actions.append(action)
         match = of.ofp_match()
         match.nw_src = IPAddr(ip[0]) 
-        match.nw_dst = IPAddr(ip[1])
+        #match.nw_dst = IPAddr(ip[1])
         msg.match = match
         print self.colours["GREEN"]+"blocking ",ip[0]+self.colours["END"]
-        
+        """blocking too much. check the stages -think about what should happen
+            maybe problem is its blocking host ips. see if can fake ips. """
         for connection in core.openflow.connections:
             connection.send(msg)
     
@@ -168,10 +169,10 @@ class DDoSPrevention(threading.Thread):
         msg.actions.append(action)
         match = of.ofp_match()
         match.nw_src = IPAddr(ip[0])
-        match.nw_dst = IPAddr(ip[1])
+        #match.nw_dst = IPAddr(ip[1])
         msg.command = of.OFPFC_DELETE
         msg.match = match
-        print self.colours["WHITE"]+"unblocking ",ip+self.colours["END"]
+        print self.colours["WHITE"]+"unblocking ",ip[0]+self.colours["END"]
         for connection in core.openflow.connections:
             connection.send(msg)
         
