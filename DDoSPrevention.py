@@ -8,6 +8,7 @@ import time
 import openflow.libopenflow_01 as of
 from pox.core import core
 from pox.lib.addresses import IPAddr
+from pox.lib.revent import EventHalt
 
 
 class DDoSPrevention(threading.Thread):
@@ -16,7 +17,7 @@ class DDoSPrevention(threading.Thread):
     def __init__(self,threshold):
         threading.Thread.__init__(self)
         self.colours = {"RED":"\033[1m\033[31m","WHITE":"\033[1m\033[37m","GREEN":"\033[1m\033[32m","END":"\033[0m"}
-
+        core.openflow.addListenerByName("PacketIn",self.dropPacket,priority=1)
 
         self.blockedIps = {}
         self.pushMonitoringFlow()
@@ -25,7 +26,18 @@ class DDoSPrevention(threading.Thread):
 
    
        
-        
+    def dropPacket(self,event):
+        #get source ip. if in blocked ips, stop event
+        packet = event.parsed
+        ip = packet.find('ipv4')
+        """this stops riplpox from routing the packet, effectively dropping it"""
+       
+        if ip and str(ip.srcip) in self.blockedIps:
+            print "blocking ",ip
+            return EventHalt
+
+
+
         
         
     #
@@ -53,7 +65,7 @@ class DDoSPrevention(threading.Thread):
             
             for ip in self.blockedIps.keys():
                 timeStamp = self.blockedIps[ip]
-                #print ip,timeStamp
+                
                 if (time.time()-timeStamp) >(120): #two minutes
                     self.blockedIps.pop(ip) #take it out of current list of ips being blocked
                     self.unblock(ip)
@@ -83,16 +95,16 @@ class DDoSPrevention(threading.Thread):
                 if event["metric"] == "ddos":   
                     agent = event["agent"]
                     sourceIP,destIP = self.getDetailedFlowInfo(agent)
+                    
 
                     """check that a sourceIP was returned, and its not already being blocked"""
-                    if sourceIP and (sourceIP,destIP) not in self.blockedIps:
+                    if sourceIP != None and sourceIP not in self.blockedIps:
                         if destIP != None:
                             print self.colours["RED"]+"detected new attack from "+sourceIP+" to "+destIP+self.colours["END"]
-                        else:
-                            print self.colours["RED"]+"detected new attack from "+sourceIP+self.colours["END"]
+                      
 
-                        newips.append((sourceIP,destIP))
-                        self.blockedIps[(sourceIP,destIP)] = time.time()
+                        newips.append(sourceIP)
+                        self.blockedIps[sourceIP] = time.time()
 
         return newips
 
@@ -150,19 +162,18 @@ class DDoSPrevention(threading.Thread):
     
     def block(self,ip):
         msg = of.ofp_flow_mod()
-        action = of.ofp_action_output(port=of.OFPP_NONE)
+        action = of.ofp_action_output(port=of.OFPP_CONTROLLER)
         msg.actions.append(action)
         match = of.ofp_match()
-        match.nw_src = IPAddr(ip[0]) 
-        #match.nw_dst = IPAddr(ip[1])
-        msg.match = match
-        print self.colours["GREEN"]+"blocking ",ip[0]+self.colours["END"]
-        """blocking too much. check the stages -think about what should happen
-            maybe problem is its blocking host ips. see if can fake ips. """
+        match.nw_src = IPAddr(ip) 
 
-        #
+        msg.match = match
+        print self.colours["GREEN"]+"blocking ",ip+self.colours["END"]
+        """cant use NONE for port. stops routing."""
+
+        """this way, replacing actions with just one, seems to be faster"""
         msg2 = of.ofp_flow_mod()
-        msg2.match.nw_src = IPAddr(ip[0])
+        msg2.match.nw_src = IPAddr(ip)
         msg2.actions=[of.ofp_action_output(port=of.OFPP_CONTROLLER)]
         for connection in core.openflow.connections:
             connection.send(msg2)
@@ -174,11 +185,11 @@ class DDoSPrevention(threading.Thread):
         action = of.ofp_action_output(port=of.OFPP_CONTROLLER)
         msg.actions.append(action)
         match = of.ofp_match()
-        match.nw_src = IPAddr(ip[0])
+        match.nw_src = IPAddr(ip)
         #match.nw_dst = IPAddr(ip[1])
         msg.command = of.OFPFC_DELETE
         msg.match = match
-        print self.colours["WHITE"]+"unblocking ",ip[0]+self.colours["END"]
+        print self.colours["WHITE"]+"unblocking ",ip+self.colours["END"]
         for connection in core.openflow.connections:
             connection.send(msg)
         
