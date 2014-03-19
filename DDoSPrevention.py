@@ -53,11 +53,12 @@ class DDoSPrevention(threading.Thread):
             
             for ip in self.blockedIps.keys():
                 timeStamp = self.blockedIps[ip]
-                print ip,timeStamp
+                #print ip,timeStamp
                 if (time.time()-timeStamp) >(120): #two minutes
                     self.blockedIps.pop(ip) #take it out of current list of ips being blocked
                     self.unblock(ip)
-           
+            
+            #print "currently blocked IPs",self.blockedIps
             for ip in self.checkThreshold():
                 self.block(ip) 
            
@@ -158,14 +159,19 @@ class DDoSPrevention(threading.Thread):
         print self.colours["GREEN"]+"blocking ",ip[0]+self.colours["END"]
         """blocking too much. check the stages -think about what should happen
             maybe problem is its blocking host ips. see if can fake ips. """
+
+        #
+        msg2 = of.ofp_flow_mod()
+        msg2.match.nw_src = IPAddr(ip[0])
+        msg2.actions=[of.ofp_action_output(port=of.OFPP_CONTROLLER)]
         for connection in core.openflow.connections:
-            connection.send(msg)
+            connection.send(msg2)
     
 
     """could also just set the idle timeout """   
     def unblock(self,ip):
         msg = of.ofp_packet_out()
-        action = of.ofp_action_output(port=of.OFPP_NONE)
+        action = of.ofp_action_output(port=of.OFPP_CONTROLLER)
         msg.actions.append(action)
         match = of.ofp_match()
         match.nw_src = IPAddr(ip[0])
