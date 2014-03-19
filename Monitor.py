@@ -7,26 +7,27 @@ from DDoSPrevention import DDoSPrevention
 class Monitor(threading.Thread):
     
     
-    def __init__(self,sflow,openflow):
+    def __init__(self,sflow,openflow,lowestThreshold):
         self.sflow = sflow
         self.openflow = openflow
-        """iperf reports over 9 gigs. """
-        dos = DDoSPrevention(1000)
+        
+        print "lowestThreshold is ", str(lowestThreshold)
+        dos = DDoSPrevention(lowestThreshold)
         dos.start()
         threading.Thread.__init__(self)
 
         
+
+
         
-    """go through openflow and sflow shared memory stuff and check for matches
-       create a schema from values, and
-        for every schema, go through all the openflow/sflow stuff and see if it matches everything"""
+        
     def run(self):
         while True:
             time.sleep(5)
             
-            for recentMatch in self.sflow.recentMatches:
+            #for recentMatch in self.sflow.recentMatches:
                 #print recentMatch.openflow.items()
-                pass
+                #pass
             
             #print self.openflow.results
                 

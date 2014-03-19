@@ -16,6 +16,7 @@ class Schema:
     def __init__(self):
         self.openflow = dict.fromkeys(['IngressPort','EthernetSource','EthernetDestination','EthernetType','VLANpriority','IPSourceAddress','IPDestinationAddress','IPprotocol','IPToS','sourcePort','destinationPort','VLANID'])
         self.application = None
+        self.ddos = None
         self.links = [] # tuple with link tuple, and latency value
         self.latency = ()
      
@@ -51,6 +52,9 @@ class Schema:
             time = int (tree.xpath('latency/milliseconds')[0].text)
             type = int (tree.xpath('latency/moreOrLess')[0].text)
             self.latency = ((firstMac,secondMac),time,type)
+
+        if tree.xpath("DDoSMitigation"):
+            self.ddos=(tree.xpath("DDoSMitigation")[0].text)
 
 
     def fromPacket(self, packet):

@@ -3,9 +3,6 @@
 
 <request>
 	<openflow> 
-		<IPprotocol>
-		TCP
-		</IPprotocol>
 		<sourcePort>
 		1000
 		</sourcePort>
@@ -29,6 +26,10 @@
 	1
 	</moreOrLess>
 </latency>
+
+<DDoSmitigation>
+	1000
+</DDoSmitigation>
 
 </request>
 

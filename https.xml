@@ -6,9 +6,6 @@
 		<IPSourceAddress>
 			443
 		</IPSourceAddress>
-		<IPprotocol>
-			https
-		</IPprotocol>
 	</openflow>
 	<application>
 		11

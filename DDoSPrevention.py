@@ -30,10 +30,9 @@ class DDoSPrevention(threading.Thread):
         #get source ip. if in blocked ips, stop event
         packet = event.parsed
         ip = packet.find('ipv4')
+
         """this stops riplpox from routing the packet, effectively dropping it"""
-       
         if ip and str(ip.srcip) in self.blockedIps:
-            print "blocking ",ip
             return EventHalt
 
 
@@ -179,7 +178,7 @@ class DDoSPrevention(threading.Thread):
             connection.send(msg2)
     
 
-    """could also just set the idle timeout """   
+    """could also just set the hard timeout """   
     def unblock(self,ip):
         msg = of.ofp_packet_out()
         action = of.ofp_action_output(port=of.OFPP_CONTROLLER)

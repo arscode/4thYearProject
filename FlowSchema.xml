@@ -54,7 +54,9 @@ Transport destination port/ICMP code 16 bits
 		</xs:all>
 	</xs:complexType>
 	</xs:element>
+
 <xs:element name = "application" type="xs:integer"/>
+
 <xs:element name = "latency" minOccurs = "0">
 	<xs:complexType>
 		<xs:sequence>
@@ -63,12 +65,10 @@ Transport destination port/ICMP code 16 bits
 		<xs:element name = "secondMac" type="xs:string" minOccurs = "1"/>
 		<xs:element name = "moreOrLess" type ="xs:integer" minOccurs = "1"/>
 		</xs:sequence>
-		
 	</xs:complexType>
-
 </xs:element>
 			
-	
+<xs:element name = "DDoSmitigation" type="xs:integer" minOccurs = "0"/>
 
 </xs:sequence>
 </xs:complexType>
