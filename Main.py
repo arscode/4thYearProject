@@ -32,13 +32,13 @@ def getFiles():
 
 schemas = SchemaStore(getFiles())
 """get lowest threshold"""
-lowestThreshold = 10000
+lowestThreshold = 9999999
 for schema in schemas.schemas:
     if schema.ddos:
         if schema.ddos<lowestThreshold:
             lowestThreshold=schema.ddos
 
-    
+print lowestThreshold
 openflow = Openflow(schemas)
 #openflow.start()
 sflow = Sflow(schemas)

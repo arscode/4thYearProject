@@ -11,7 +11,7 @@ class Monitor(threading.Thread):
         self.sflow = sflow
         self.openflow = openflow
         
-        print "lowestThreshold is ", str(lowestThreshold)
+        #print "lowestThreshold is ", str(lowestThreshold)
         dos = DDoSPrevention(lowestThreshold)
         dos.start()
         threading.Thread.__init__(self)

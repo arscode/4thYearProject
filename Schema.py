@@ -53,8 +53,8 @@ class Schema:
             type = int (tree.xpath('latency/moreOrLess')[0].text)
             self.latency = ((firstMac,secondMac),time,type)
 
-        if tree.xpath("DDoSMitigation"):
-            self.ddos=(tree.xpath("DDoSMitigation")[0].text)
+        if tree.xpath("DDoSmitigation"):
+            self.ddos= int (tree.xpath("DDoSmitigation")[0].text)
 
 
     def fromPacket(self, packet):
