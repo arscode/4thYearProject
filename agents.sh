@@ -17,7 +17,7 @@
 
 
 ovs-vsctl -- --id=@sflow create sflow agent=4_2_2-eth1 target=127.0.0.1 sampling=1 polling=1 -- -- set bridge 4_2_2  sflow=@sflow
-ovs-vsctl -- --id=@sflow create sflow agent=4_2_1-eth1 target=127.0.0.1 sampling=1 polling=1-- -- set bridge 4_2_1  sflow=@sflow
+ovs-vsctl -- --id=@sflow create sflow agent=4_2_1-eth1 target=127.0.0.1 sampling=1 polling=1 -- -- set bridge 4_2_1  sflow=@sflow
 ovs-vsctl -- --id=@sflow create sflow agent=4_1_2-eth1 target=127.0.0.1 sampling=1 polling=1 -- -- set bridge 4_1_2  sflow=@sflow
 ovs-vsctl -- --id=@sflow create sflow agent=4_1_1-eth1 target=127.0.0.1 sampling=1 polling=1 -- -- set bridge 4_1_1  sflow=@sflow
 
@@ -28,7 +28,7 @@ ovs-vsctl -- --id=@sflow create sflow agent=3_0_1-eth1 target=127.0.0.1 sampling
 
 ovs-vsctl -- --id=@sflow create sflow agent=2_3_1-eth1 target=127.0.0.1 sampling=1 polling=1 -- -- set bridge 2_3_1  sflow=@sflow
 ovs-vsctl -- --id=@sflow create sflow agent=2_2_1-eth1 target=127.0.0.1 sampling=1 polling=1 -- -- set bridge 2_2_1  sflow=@sflow
-ovs-vsctl -- --id=@sflow create sflow agent=2_1_1-eth1 target=127.0.0.1 sampling=1 polling=1 -- -- set bridge 2_0_2  sflow=@sflow
+ovs-vsctl -- --id=@sflow create sflow agent=2_1_1-eth1 target=127.0.0.1 sampling=1 polling=1 -- -- set bridge 2_1_1  sflow=@sflow
 ovs-vsctl -- --id=@sflow create sflow agent=2_0_1-eth1 target=127.0.0.1 sampling=1 polling=1 -- -- set bridge 2_0_1  sflow=@sflow
 
 ovs-vsctl -- --id=@sflow create sflow agent=1_3_1-eth1 target=127.0.0.1 sampling=1 polling=1 -- -- set bridge 1_3_1  sflow=@sflow

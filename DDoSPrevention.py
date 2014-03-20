@@ -17,7 +17,10 @@ class DDoSPrevention(threading.Thread):
     def __init__(self,threshold):
         threading.Thread.__init__(self)
         self.colours = {"RED":"\033[1m\033[31m","WHITE":"\033[1m\033[37m","GREEN":"\033[1m\033[32m","END":"\033[0m"}
-        core.openflow.addListenerByName("PacketIn",self.dropPacket,priority=1)
+        """priority one so it overrides controller and changing path"""
+        core.openflow.addListenerByName("PacketIn",self.dropPacket,priority=100000)
+
+        self.hosts = ["10.0.0.2","10.0.0.3","10.0.1.2","10.0.1.3","10.1.0.2","10.1.0.3","10.1.1.2","10.1.1.3","10.2.0.2","10.2.0.3","10.2.1.2","10.2.1.3","10.3.0.2","10.3.0.3","10.3.1.2","10.3.1.3"]
 
         self.blockedIps = {}
         self.pushMonitoringFlow()
@@ -25,13 +28,13 @@ class DDoSPrevention(threading.Thread):
 
 
    
-       
+    """this stops riplpox from routing the packet, effectively dropping it
+    it stops the packet from going to a host, but it still goes to the controller
+    and still would take up a bit of bandwith in the network        
+    exactly how mac blocker works, how it meant to be done?                         """   
     def dropPacket(self,event):
-        #get source ip. if in blocked ips, stop event
-        packet = event.parsed
-        ip = packet.find('ipv4')
-
-        """this stops riplpox from routing the packet, effectively dropping it"""
+        #packet = event.parsed
+        ip = event.parsed.find('ipv4')
         if ip and str(ip.srcip) in self.blockedIps:
             return EventHalt
 
@@ -57,7 +60,7 @@ class DDoSPrevention(threading.Thread):
         connection.request("PUT",url,payload)
         return connection.getresponse() #do error checking
     
-    """need a way to check that ip is already blocked. so not blocking it over and over"""
+    """ """
     def run(self):
         while True:
             time.sleep(1)
@@ -65,46 +68,51 @@ class DDoSPrevention(threading.Thread):
             for ip in self.blockedIps.keys():
                 timeStamp = self.blockedIps[ip]
                 
-                if (time.time()-timeStamp) >(120): #two minutes
+                if (time.time()-timeStamp) >(300): #two minutes
                     self.blockedIps.pop(ip) #take it out of current list of ips being blocked
                     self.unblock(ip)
-            
-            #print "currently blocked IPs",self.blockedIps
+
             for ip in self.checkThreshold():
                 self.block(ip) 
            
         
-        
-    #in check threshold, call block if its not already in self.ips...and update self.ip
+
     """get list of ips that are above the threshold
         add them to a list of ips currently being blocked
         and return a list of new naughty ips to block"""
     def checkThreshold(self):
-        
-        url = "/events/json?maxEvents=10"
+        url = "/events/json"
         connection = httplib.HTTPConnection("localhost",8008)
         connection.request("GET",url," ")
         response = connection.getresponse()
         events = json.loads(response.read())
         newips = []
-        
-
         if len(events)> 0:
             for event in events:
                 if event["metric"] == "ddos":   
                     agent = event["agent"]
                     sourceIP,destIP = self.getDetailedFlowInfo(agent)
-                    
+                   
 
-                    """check that a sourceIP was returned, and its not already being blocked"""
-                    if sourceIP != None and sourceIP not in self.blockedIps:
-                        if destIP != None:
+                     
+                    """check it hasn't caught a response instead of the outgoing connection"""
+                    if sourceIP in self.hosts:
+                        if destIP not in self.blockedIps:
+                            print self.colours["RED"]+"detected new attack from "+destIP+" to "+sourceIP+self.colours["END"]
+                            newips.append(destIP)
+                            self.blockedIps[destIP] = time.time()
+
+
+                    elif destIP in self.hosts:
+                        if sourceIP not in self.blockedIps:
                             print self.colours["RED"]+"detected new attack from "+sourceIP+" to "+destIP+self.colours["END"]
-                      
+                            newips.append(sourceIP)
+                            self.blockedIps[sourceIP] = time.time()
 
-                        newips.append(sourceIP)
-                        self.blockedIps[sourceIP] = time.time()
+                    
+                            
 
+                        
         return newips
 
 
@@ -122,32 +130,25 @@ class DDoSPrevention(threading.Thread):
             #rint attackerInfo
             return None,None
 
-        
-
+       
 
         recentAttacks = attackerInfo[0]["topKeys"]
         
         """the timestamp is how many millseconds ago the event was generated
-        if the event was over two minutes ago, forget it. 
+        if the event was over five minutes ago, forget it. 
          otherwise the same events are picked up again    """
-
         timeStamp = recentAttacks[0]["lastUpdate"]
-        if (timeStamp>=120000):
+        if (timeStamp>=300000):
             return None,None
  
-   
-        """if icmp no broadcast address so only one entry
-        if len(recentAttacks)<2:
-            print attackerInfo
-            return None,None
-            """
-        """if the timestamp is older than a minute, disregard the old event"""
 
         ipaddresses = (recentAttacks[0]["key"]).split(',')
+
         """depending on type of attack, there might not be a dest ip addr"""
         if len(ipaddresses)==1:
             sourceIP = ipaddresses[0]
             destIP = None
+            print "only one"
         else:
             sourceIP = ipaddresses[0]
             destIP = ipaddresses[1]
@@ -160,20 +161,12 @@ class DDoSPrevention(threading.Thread):
     
     
     def block(self,ip):
-        msg = of.ofp_flow_mod()
-        action = of.ofp_action_output(port=of.OFPP_CONTROLLER)
-        msg.actions.append(action)
         match = of.ofp_match()
         match.nw_src = IPAddr(ip) 
-
-        msg.match = match
+      
         print self.colours["GREEN"]+"blocking ",ip+self.colours["END"]
-        """cant use NONE for port. stops routing."""
-
-        """this way, replacing actions with just one, seems to be faster"""
-        msg2 = of.ofp_flow_mod()
-        msg2.match.nw_src = IPAddr(ip)
-        msg2.actions=[of.ofp_action_output(port=of.OFPP_CONTROLLER)]
+    
+        msg2 = of.ofp_flow_mod(command=of.OFPFC_ADD,actions=[],match=match)
         for connection in core.openflow.connections:
             connection.send(msg2)
     
