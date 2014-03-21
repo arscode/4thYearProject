@@ -8,17 +8,19 @@ import pox.openflow.libopenflow_01 as of
 class Schema:
     
     
-    openflowAttributes = ('IngressPort','EthernetSource','EthernetDestination','EthernetType','VLANpriority','IPSourceAddress','IPDestinationAddress','IPprotocol','IPToS','sourcePort','destinationPort','VLANID')
+    openflowAttributes = ('Bytes','IngressPort','EthernetSource','EthernetDestination','EthernetType','VLANpriority','IPSourceAddress','IPDestinationAddress','IPprotocol','IPToS','sourcePort','destinationPort','VLANID')
 
 
     #ip protocol numbers http://en.wikipedia.org/wiki/List_of_IP_protocol_numbers
 
     def __init__(self):
-        self.openflow = dict.fromkeys(['IngressPort','EthernetSource','EthernetDestination','EthernetType','VLANpriority','IPSourceAddress','IPDestinationAddress','IPprotocol','IPToS','sourcePort','destinationPort','VLANID'])
+        self.flow = dict.fromkeys(['Bytes','IngressPort','EthernetSource','EthernetDestination','EthernetType','VLANpriority','IPSourceAddress','IPDestinationAddress','IPprotocol','IPToS','sourcePort','destinationPort','VLANID'])
         self.application = None
         self.ddos = None
         self.links = [] # tuple with link tuple, and latency value
         self.latency = ()
+
+        #self.map = {""}
      
 
        
@@ -38,11 +40,11 @@ class Schema:
             path = '/request/openflow/'+ofattribute
             element = tree.xpath(path)
             if element:
-                self.openflow[ofattribute] = (element[0].text).strip()
+                self.flow[ofattribute] = (element[0].text).strip()
         #convert types that shouldn't be strings. or use library to get int not text?s
 
-        if self.openflow['destinationPort']:
-            self.openflow['destinationPort'] = int(self.openflow['destinationPort'])
+        if self.flow['destinationPort']:
+            self.flow['destinationPort'] = int(self.openflow['destinationPort'])
 
         self.application = (tree.xpath("application")[0].text).strip()
         
@@ -61,39 +63,49 @@ class Schema:
         
         ip = packet.find('ipv4')
         if ip:
-            self.openflow["IPSourceAddress"]=ip.srcip
-            self.openflow["IPDestinationAddress"]=ip.dstip
-            self.openflow["IPToS"]=ip.tos
-            self.openflow["IPprotocol"]=ip.protocol
+            self.flow["IPSourceAddress"]=ip.srcip
+            self.flow["IPDestinationAddress"]=ip.dstip
+            self.flow["IPToS"]=ip.tos
+            self.flow["IPprotocol"]=ip.protocol
         
         ether = packet.find('ethernet')
         if ether:
-            self.openflow["EthernetSource"]=ether.src
-            self.openflow["EthernetDestination"]=ether.dst
-            self.openflow["EthernetType"]=ether.type
+            self.flow["EthernetSource"]=ether.src
+            self.flow["EthernetDestination"]=ether.dst
+            self.flow["EthernetType"]=ether.type
         tcp = packet.find('tcp')
         if tcp:
-            self.openflow["sourcePort"] = tcp.srcport
-            self.openflow["destinationPort"] = tcp.dstport
+            self.flow["sourcePort"] = tcp.srcport
+            self.flow["destinationPort"] = tcp.dstport
         udp = packet.find('udp')
         if udp:    
-            self.openflow["sourcePort"] = udp.srcport
-            self.openflow["destinationPort"] = udp.dstport
+            self.flow["sourcePort"] = udp.srcport
+            self.flow["destinationPort"] = udp.dstport
         self.application = "switch response"
 
 
-    def fromJSON(self,data):
+    def fromJSON(self,data,schema):
+        
+        """for key, value in data[0].iteritems():"""
+
+        print data
+        value = data[0]["key"]
       
-        for key, value in data[0].iteritems():
-            if type(key)=='unicode':
-                key = key.encode('utf-8').decode('ascii')
-            if type(value)=='unicode':
-                value = value.encode('utf-8')
-           
-           
-            if value==u'80': #do this properly
-                print "key equals 80"
-                self.openflow['destinationPort'] = int(value)
+        if type(value)=='unicode':
+            value = value.encode('utf-8')
+
+            
+        for attribute in schema.flow:
+            if schema.flow[attribute] != None:
+                self.flow[attribute] = value
+
+        print "-------"
+        for attribute in self.flow:
+            print attribute,self.flow[attribute]
+
+        print "-------"
+            #if value.isdigit(): 
+            #self.flow['destinationPort'] = float(value) 
 
         #get key, find right openflow bit, put value in
         #print keys
@@ -104,9 +116,9 @@ class Schema:
 
 
         #original schema will be a subset of the packet attributes
-    def equals(self,otherSchema):
-        for attribute,value in self.openflow.items():
-            if otherSchema.openflow[attribute] != value:
+    def equalsFlow(self,otherSchema):
+        for attribute,value in self.flow.items():
+            if otherSchema.flow[attribute] != value:
                 return False
         return True
 

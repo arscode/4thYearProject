@@ -165,7 +165,6 @@ class DDoSPrevention(threading.Thread):
         match.nw_src = IPAddr(ip) 
       
         print self.colours["GREEN"]+"blocking ",ip+self.colours["END"]
-    
         msg2 = of.ofp_flow_mod(command=of.OFPFC_ADD,actions=[],match=match)
         for connection in core.openflow.connections:
             connection.send(msg2)

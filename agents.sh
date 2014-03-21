@@ -1,17 +1,8 @@
 
 
-# should only be one connection from host, so each host has one ip addr 
+
 
 /home/james/mininet/sflow-rt/start.sh &
-
-#configure host ip addresses. hosts should be set by --mac option
-#worse comes to worse, set ip addr for a switch and use that a source of DDoS
-
-#bridge the interaces
-
-
-
-
 
 
 

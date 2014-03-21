@@ -32,7 +32,7 @@ class Sflow(threading.Thread):
 
     def run(self):
     	while True:
-            time.sleep(10)
+            time.sleep(5)
             self.createFlows()
             self.pushFlows()
             self.checkFlows() 
@@ -42,13 +42,17 @@ class Sflow(threading.Thread):
     def parseSchema(self,schema):
         keys = []
         values = []
-        for attribute, value in schema.openflow.items():
+        for attribute, value in schema.flow.items():
             value = str(value)
             if value=="None":
             	continue
 
             if attribute=="IngressPort":
                 pass
+
+            elif attribute=="Bytes":
+                keys.append("bytes")
+                values.append(value)
 
             elif attribute=="EthernetSource":
                 keys.append("macsource")
@@ -85,9 +89,10 @@ class Sflow(threading.Thread):
                 keys.append("iptos")
                 values.append("iptos="+value)
 
-            elif attribute=="sourcePort": #no tcp flow key?
-                keys.append("udpsourceport")
-                values.append("udpsourceport="+value)
+            elif attribute=="sourcePort": 
+                keys.append("tcpsourceport")
+                values.append("tcpsourceport="+value)
+
 
             elif attribute=="destinationPort":
                 keys.append("tcpdestinationport")
@@ -143,10 +148,18 @@ class Sflow(threading.Thread):
             result = self.getFlow(f[2])
             if result:
                 schema = Schema()
-                schema.fromJSON(result)
+                schema.fromJSON(result,self.getSchema(f[2]))
                 for original in self.schemas.schemas:
-                    if original.equals(schema):
+                    print original.flow["sourcePort"],schema.flow["sourcePort"]
+                    if original.equalsFlow(schema):
                         self.recentMatches.append(schema)
+
+
+
+    def getSchema(self,application):
+        for s in self.schemas.schemas:  
+            if s.application==application:
+                return s
          
       
         

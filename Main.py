@@ -38,12 +38,12 @@ for schema in schemas.schemas:
         if schema.ddos<lowestThreshold:
             lowestThreshold=schema.ddos
 
-print lowestThreshold
+
 openflow = Openflow(schemas)
-#openflow.start()
+openflow.start()
 sflow = Sflow(schemas)
-#sflow.start()
-monitor = Monitor(None,None,lowestThreshold)
+sflow.start()
+monitor = Monitor(sflow,openflow,lowestThreshold,schemas.schemas)
 monitor.start()
 
 

